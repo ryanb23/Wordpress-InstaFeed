@@ -867,7 +867,6 @@ function display_sb_instagram_feed($atts, $content = null) {
 //    if($page_id != 194 && $page_id != 1613)
     if($sb_instagram_post_style != 'list')
     {
-        $sb_instagram_content .= '<div class="row"><div class="pull-right export_but"></div></div>';
         $sb_instagram_content .= '<div id="sb_instagram" class="sbi' . $sbi_class . $sb_instagram_disable_mobile;
         if ( !empty($sb_instagram_height) ) $sb_instagram_content .= ' sbi_fixed_height ';
         $sb_instagram_content .= ' sbi_col_' . trim($sb_instagram_cols_class);
