@@ -1185,6 +1185,7 @@ function sbi_license_page() {
                 <a href="?page=sb-instagram-feed&amp;tab=keyword" class="nav-tab"><?php _e('5. Manage Brands'); ?></a>
                 <a href="?page=sb-instagram-feed&amp;tab=tag" class="nav-tab"><?php _e('6. Manage Influencers'); ?></a>
                 <a href="?page=sb-instagram-feed&amp;tab=limit_manage" class="nav-tab"><?php _e('7. Manage Limits'); ?></a>
+                <a href="?page=sb-instagram-feed&amp;tab=permission_manage" class="nav-tab"><?php _e('8. Manage Permissions'); ?></a>
                 <a href="?page=sb-instagram-feed&amp;tab=support" class="nav-tab"><?php _e('Support'); ?></a>
                 <a href="?page=sb-instagram-license" class="nav-tab nav-tab-active"><?php _e('License'); ?></a>
             </h2>
@@ -1739,6 +1740,7 @@ function sb_instagram_settings_page() {
                 <a href="?page=sb-instagram-feed&amp;tab=keyword" class="nav-tab <?php echo $sbi_active_tab == 'keyword' ? 'nav-tab-active' : ''; ?>"><?php _e('5. Manage Brands'); ?></a>
                 <a href="?page=sb-instagram-feed&amp;tab=tag" class="nav-tab <?php echo $sbi_active_tab == 'tag' ? 'nav-tab-active' : ''; ?>"><?php _e('6. Manage Influencers'); ?></a>
                 <a href="?page=sb-instagram-feed&amp;tab=limit_manage" class="nav-tab <?php echo $sbi_active_tab == 'limit_manage' ? 'nav-tab-active' : ''; ?>"><?php _e('5. Manage Limits'); ?></a>
+                <a href="?page=sb-instagram-feed&amp;tab=permission_manage" class="nav-tab <?php echo $sbi_active_tab == 'permission_manage' ? 'nav-tab-active' : ''; ?>"><?php _e('6. Manage Permissions'); ?></a>
                 <a href="?page=sb-instagram-feed&amp;tab=support" class="nav-tab <?php echo $sbi_active_tab == 'support' ? 'nav-tab-active' : ''; ?>"><?php _e('Support'); ?></a>
                 <a href="?page=sb-instagram-license" class="nav-tab"><?php _e('License'); ?></a>
             </h2>
@@ -3196,6 +3198,94 @@ function sb_instagram_settings_page() {
             </div>
         </div>
     <?php }?>
+
+    <?php if( $sbi_active_tab == 'permission_manage'){ ?>
+        </form>
+        <h3><?php _e('Manage Permissions'); ?></h3>
+        <div id="page_container">
+
+            <table id="table_permission" class="datatable">
+                <thead>
+                <tr>
+                    <th style="width:23px;">No</th>
+                    <th>User Role</th>
+                    <th>Excel Download</th>
+                    <th>Labels</th>
+                    <th>Filter Media</th>
+                    <th>AutoUpdate</th>
+                    <th>Default Social Name</th>
+                    <th>Managable Pages</th>
+                    <th>Search(Media)</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div class="lightbox_bg"></div>
+
+        <div class="lightbox_container">
+            <div class="lightbox_close"></div>
+            <div class="lightbox_content">
+
+                <h2>Edit Limit</h2>
+                <form class="form edit" id="form_pagelimit" data-id="" novalidate>
+                    <div class="input_container">
+                        <div class="field_container">
+                            <label class="left half">Nums</label>
+                            <label class="left half">Days</label>
+                        </div>
+                    </div>
+                    <div class="input_container">
+                        <label for="keyword_name">Influencer: </label>
+                        <div class="field_container">
+                            <input type="text" class="text left half" name="influencer_num" id="influencer_num" value="">
+                            <input type="text" class="text left half" name="influencer_day" id="influencer_day" value="">
+                        </div>
+                    </div>
+                    <div class="input_container">
+                        <label for="brand_num">Brand: </label>
+                        <div class="field_container">
+                            <input type="text" class="text left half" name="brand_num" id="brand_num" value="">
+                            <input type="text" class="text left half" name="brand_day" id="brand_day" value="">
+                        </div>
+                    </div>
+                    <div class="input_container">
+                        <label for="ranking_num">Ranking: </label>
+                        <div class="field_container">
+                            <input type="text" class="text left half" name="ranking_num" id="ranking_num" value="">
+                        </div>
+                    </div>
+                    <div class="input_container">
+                        <label for="ranking_m_num">Ranking(Media): </label>
+                        <div class="field_container">
+                            <input type="text" class="text left half" name="ranking_m_num" id="ranking_m_num" value="">
+                            <input type="text" class="text left half" name="ranking_m_day" id="ranking_m_day" value="">
+                        </div>
+                    </div>
+                    <div class="input_container">
+                        <label for="search_num">Search: </label>
+                        <div class="field_container">
+                            <input type="text" class="text left half" name="search_num" id="search_num" value="">
+                        </div>
+                    </div>
+                    <div class="input_container">
+                        <label for="search_m_num">Search(Media): </label>
+                        <div class="field_container">
+                            <input type="text" class="text left half" name="search_m_num" id="search_m_num" value="">
+                            <input type="text" class="text left half" name="search_m_day" id="search_m_day" value="">
+                        </div>
+                    </div>
+                    <div class="button_container">
+                        <button type="submit">Edit</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    <?php }?>
+
     <?php if( $sbi_active_tab == 'keyword' ) {  //Keyword Manage tab ?>
         </form>
         <h3><?php _e('Manage Brands'); ?></h3>

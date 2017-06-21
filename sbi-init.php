@@ -841,7 +841,7 @@ function display_sb_instagram_feed($atts, $content = null) {
         $follower_max_html = get_select_box('max',$search_post_param);
         $category_html = get_category_box($search_post_param);
 
-        $html = '<div class="search-input-container"><form action="" method="post"><div class="row"><div class="inf-cat-div">'.$category_html.'</div></div><div class="row"><div style="margin:auto;width:310px;"><div class="follower-cat-div">'.$follower_min_html.'</div><div class="follower-cat-div" style="float:right;"> '.$follower_max_html.'</div><div class="clearfix"></div></div></div><div class="searc-input-div"> <input class="search-input" name="input_keywords" placeholder="Palabras Clave..." type="text" value="'.$keywords_custom.'" autocomplete="off"><p class="button"></p><div class="clearfix"></div></div><h5 style="text-align:center;margin-top:20px;"><button class="btn btn-danger btn-generate-keyword" type="button">Generate Word Cloud</button><input type="hidden" name="generate_keyword" value="0"/><h5></form><div class="danger"> La palabra clave no es válida. Se requiere al menos una palabra clave</div></div>';
+        $html = '<div class="search-input-container"><form action="" method="post"><div class="row"><div class="inf-cat-div">'.$category_html.'</div></div><div class="row"><div style="margin:auto;width:310px;"><div class="follower-cat-div">'.$follower_min_html.'</div><div class="follower-cat-div" style="float:right;"> '.$follower_max_html.'</div><div class="clearfix"></div></div></div><div class="searc-input-div"> <input class="search-input" name="input_keywords" placeholder="Palabras Clave..." type="text" value="'.$keywords_custom.'" autocomplete="off"><p class="button"></p><div class="clearfix"></div></div><h5 style="text-align: center;margin-top:20px;">PRUEBA @HANDLES, #HASHTAGS O CUALQUIER PALABRA CLAVE</h5><h5 style="text-align:center;margin-top:20px;"><button class="btn btn-danger btn-generate-keyword" type="button">Generar Nube de Términos</button><input type="hidden" name="generate_keyword" value="0"/><h5></form><div class="danger"> La palabra clave no es válida. Se requiere al menos una palabra clave</div></div>';
         $sb_instagram_content = $html;
         if(trim($keywords_custom) == ''){
             if($sb_instagram_post_style == 'list')
@@ -858,7 +858,7 @@ function display_sb_instagram_feed($atts, $content = null) {
                     return $sb_instagram_content;
                 }
                 $sb_instagram_content .= '<script>var wcloud_txt_arr = '.json_encode($text_result_arr).'</script>';
-                $sb_instagram_content .= '<h5 style="text-align: center;margin-top:20px;">PRUEBA @HANDLES, #HASHTAGS O CUALQUIER PALABRA CLAVE</h5><div id="search_word_cloud"></div>';
+                $sb_instagram_content .= '<div id="search_word_cloud"></div>';
             }
             return $sb_instagram_content;
         }
