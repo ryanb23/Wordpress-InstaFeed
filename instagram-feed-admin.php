@@ -1033,6 +1033,137 @@ function sb_instagram_manage_pagelimit(){
     die();
 }
 add_action('wp_ajax_manage_pagelimit','sb_instagram_manage_pagelimit');
+
+function get_status_html($status)
+{
+    $class_name = $status ? 'status-on' : 'status-off';
+    $display_name = $status ? 'ON' : 'OFF';
+    return "<span class='status ".$class_name."'>".$display_name."</span>";
+}
+
+// Permission tab
+function sb_instagram_manage_permission(){
+    global $wpdb;
+// Get job (and id)
+    $user_roles = get_editable_roles();
+    $job = '';
+    $id  = '';
+    if (isset($_REQUEST['job'])){
+        $job = $_REQUEST['job'];
+        if ($job == 'get_data' ||
+            $job == 'edit_data' ){
+            if (isset($_REQUEST['id'])){
+                $id = $_REQUEST['id'];
+            }
+        } else {
+            $job = '';
+        }
+    }
+    // Prepare array
+    $mysql_data = array();
+
+    if ($job != ''){
+
+        if ($job == 'get_data'){
+            // Get Pagelimit List
+            $sb_instagram_settings = get_option('sb_instagram_settings');
+            $sb_instagram_pagelimit = unserialize($sb_instagram_settings['sb_instagram_pagelimit']);
+
+            $result  = 'success';
+            $message = 'query success';
+            $t_index = 0;
+            foreach($user_roles as $key => $row){
+                $excel_download =  0;
+                $label          =  0;
+                $filter_media   =  0;
+                $autoupdate     =  0;
+                $default_socialname =  0;
+                $manage_pages   =  0;
+
+
+                $functions  = '<div class="function_buttons"><ul>';
+                $functions .= '<li class="function_edit"><a data-id="'   . $key . '"  data-excel_download="'.$excel_download.'"  data-label="'.$label.'"  data-filter_media="'.$filter_media.'"  data-autoupdate="'.$autoupdate.'" data-default_socialname="'.$default_socialname.'" data-manage_pages="'.$manage_pages.'"><span>Edit</span></a></li>';
+                $functions .= '</ul></div>';
+
+                $mysql_data[] = array(
+                    "id"          =>  ++$t_index,//$row->id ,
+                    "user_role"  => "<b style='color:#0073aa'>".$row['name'] . "</b>",
+                    "excel_download"  => get_status_html($excel_download),
+                    "label"    => get_status_html($label),
+                    "filter_media"     => get_status_html($filter_media),
+                    "autoupdate"     => get_status_html($autoupdate),
+                    "default_socialname"     => $default_socialname,
+                    "manage_pages"     => $manage_pages,
+                    "functions"     => $functions
+                );
+            }
+        }elseif ( $job == 'edit_data' ){
+            // Edit Keyword
+            $userrole_id = $id;
+            $influencer_num = $_REQUEST['influencer_num'];
+            $brand_num = $_REQUEST['brand_num'];
+            $ranking_num = $_REQUEST['ranking_num'];
+            $search_num = $_REQUEST['search_num'];
+            $ranking_m_num = $_REQUEST['ranking_m_num'];
+            $search_m_num = $_REQUEST['search_m_num'];
+
+            $influencer_day = $_REQUEST['influencer_day'];
+            $brand_day = $_REQUEST['brand_day'];
+            $ranking_m_day = $_REQUEST['ranking_m_day'];
+            $search_m_day = $_REQUEST['search_m_day'];
+
+            $influencer_num = (is_null($influencer_num) || !is_numeric($influencer_num)) ? null : intval($influencer_num);
+            $brand_num = (is_null($brand_num) || !is_numeric($brand_num)) ? null : intval($brand_num);
+            $ranking_num = (is_null($ranking_num) || !is_numeric($ranking_num)) ? null : intval($ranking_num);
+            $ranking_m_num = (is_null($ranking_m_num) || !is_numeric($ranking_m_num)) ? null : intval($ranking_m_num);
+            $search_num = (is_null($search_num) || !is_numeric($search_num)) ? null : intval($search_num);
+            $search_m_num = (is_null($search_m_num) || !is_numeric($search_m_num)) ? null : intval($search_m_num);
+
+            $influencer_day = (is_null($influencer_day) || $influencer_day == '') ? null : $influencer_day;
+            $brand_day = (is_null($brand_day)  || $brand_day == '')? null : $brand_day;
+            $ranking_m_day = (is_null($ranking_m_day)  || $ranking_m_day == '')? null : $ranking_m_day;
+            $search_m_day = (is_null($search_m_day)  || $search_m_day == '')? null : $search_m_day;
+
+            $sb_instagram_settings = get_option('sb_instagram_settings');
+            $sb_instagram_pagelimit = unserialize($sb_instagram_settings['sb_instagram_pagelimit']);
+
+            $sb_instagram_pagelimit[$userrole_id]['influencer'] = $influencer_num;
+            $sb_instagram_pagelimit[$userrole_id]['brand'] = $brand_num;
+            $sb_instagram_pagelimit[$userrole_id]['ranking'] = $ranking_num;
+            $sb_instagram_pagelimit[$userrole_id]['ranking_media'] = $ranking_m_num;
+            $sb_instagram_pagelimit[$userrole_id]['search'] = $search_num;
+            $sb_instagram_pagelimit[$userrole_id]['search_media'] = $search_m_num;
+
+            $sb_instagram_pagelimit[$userrole_id]['influencer_day'] = $influencer_day;
+            $sb_instagram_pagelimit[$userrole_id]['brand_day'] = $brand_day;
+            $sb_instagram_pagelimit[$userrole_id]['ranking_media_day'] = $ranking_m_day;
+            $sb_instagram_pagelimit[$userrole_id]['search_media_day'] = $search_m_day;
+
+            $sb_instagram_settings['sb_instagram_pagelimit'] = serialize($sb_instagram_pagelimit);
+            update_option('sb_instagram_settings', $sb_instagram_settings);
+
+            $result  = 'success';
+            $message = 'query success';
+
+        }
+    }
+
+    // Prepare data
+    $data = array(
+        "result"  => $result,
+        "message" => $message,
+        "data"    => $mysql_data
+    );
+
+// Convert PHP array to JSON array
+    $json_data = json_encode($data);
+    print $json_data;
+
+    die();
+}
+add_action('wp_ajax_manage_permission','sb_instagram_manage_permission');
+
+
 function sbi_register_option() {
     // creates our settings in the options table
     register_setting('sbi_license', 'sbi_license_key', 'sbi_sanitize_license' );
@@ -1278,10 +1409,54 @@ function sbi_license_page() {
     <?php
 } //End License page
 
+function sb_instagram_get_brand_info() {
 
+    $result_arr = array();
+    $sb_instagram_settings = get_option('sb_instagram_settings');
+    $sb_keywords_list = explode("\r\n",$sb_instagram_settings['sb_instagram_custom_keywords']);
+    $sb_instagram_custom_post_ids = unserialize($sb_instagram_settings['sb_instagram_custom_post_ids']);
+
+    $sb_instagram_keywords_permalink = array();
+    $sb_instagram_keywords_post_ids = array();
+    $post_ids = get_posts(array(
+        'numberposts'=> -1,
+        'fields'        => 'ids'
+    ));
+    foreach($post_ids as $post_id_iterator){
+        $tmp_perm_link = get_permalink($post_id_iterator);
+        $tmp_perm_link_arr = explode('/',$tmp_perm_link);
+        $sb_instagram_keywords_permalink[$tmp_perm_link_arr[count($tmp_perm_link_arr)-2]] = $tmp_perm_link;
+        $sb_instagram_keywords_post_ids[$tmp_perm_link_arr[count($tmp_perm_link_arr)-2]] = $post_id_iterator;
+    }
+    $t_index = 0;
+    foreach($sb_keywords_list as $key => $row){
+        $keyword_name = strtolower(trim($row));
+        $keyword_origin = preg_replace('/[@#.]+/u', '', $keyword_name);
+
+        $has_perm = '';
+        $tmp_post_id = 0;
+        if(isset($sb_instagram_custom_post_ids[$keyword_name]))
+        {
+            if(in_array($sb_instagram_custom_post_ids[$keyword_name],$post_ids)) {
+                $tmp_post_id = $sb_instagram_custom_post_ids[$keyword_name];
+                $has_perm = get_permalink($tmp_post_id);
+            }
+        }else if(isset($sb_instagram_keywords_post_ids[$keyword_origin])){
+            $tmp_post_id = $sb_instagram_keywords_post_ids[$keyword_origin];
+            $has_perm = $sb_instagram_keywords_permalink[$keyword_origin];
+        }
+        if($has_perm == '')
+            continue;
+        $result_arr[] = array(
+            "id"          =>  $tmp_post_id,
+            "keyword_name"  => $keyword_name,
+            "has_perm"    => $has_perm,
+        );
+    }
+    return $result_arr;
+}
 
 function sb_instagram_settings_page() {
-
     //Hidden fields
     $sb_instagram_settings_hidden_field = 'sb_instagram_settings_hidden_field';
     $sb_instagram_configure_hidden_field = 'sb_instagram_configure_hidden_field';
@@ -3215,7 +3390,6 @@ function sb_instagram_settings_page() {
                     <th>AutoUpdate</th>
                     <th>Default Social Name</th>
                     <th>Managable Pages</th>
-                    <th>Search(Media)</th>
                     <th></th>
                 </tr>
                 </thead>
@@ -3230,51 +3404,66 @@ function sb_instagram_settings_page() {
             <div class="lightbox_content">
 
                 <h2>Edit Limit</h2>
-                <form class="form edit" id="form_pagelimit" data-id="" novalidate>
+                <form class="form edit" id="form_permission" data-id="" novalidate>
                     <div class="input_container">
+                        <label for="excel_download">Excel Download: </label>
                         <div class="field_container">
-                            <label class="left half">Nums</label>
-                            <label class="left half">Days</label>
+                            <input type="checkbox" class="text input-checkbox" name="excel_download" id="excel_download" value="">
                         </div>
                     </div>
                     <div class="input_container">
-                        <label for="keyword_name">Influencer: </label>
+                        <label for="label">Show Labels(Ayer/Hoy): </label>
                         <div class="field_container">
-                            <input type="text" class="text left half" name="influencer_num" id="influencer_num" value="">
-                            <input type="text" class="text left half" name="influencer_day" id="influencer_day" value="">
+                            <input type="checkbox" class="text input-checkbox" name="label" id="label" value="">
                         </div>
                     </div>
                     <div class="input_container">
-                        <label for="brand_num">Brand: </label>
+                        <label for="filter_media">Filter Media: </label>
                         <div class="field_container">
-                            <input type="text" class="text left half" name="brand_num" id="brand_num" value="">
-                            <input type="text" class="text left half" name="brand_day" id="brand_day" value="">
+                            <input type="checkbox" class="text input-checkbox" name="filter_media" id="filter_media" value="">
                         </div>
                     </div>
                     <div class="input_container">
-                        <label for="ranking_num">Ranking: </label>
+                        <label for="autoupdate">AutoUpdate: </label>
                         <div class="field_container">
-                            <input type="text" class="text left half" name="ranking_num" id="ranking_num" value="">
+                            <input type="checkbox" class="text input-checkbox" name="autoupdate" id="autoupdate" value="">
                         </div>
                     </div>
                     <div class="input_container">
-                        <label for="ranking_m_num">Ranking(Media): </label>
+                        <label for="default_socialname">Default Social Names: </label>
                         <div class="field_container">
-                            <input type="text" class="text left half" name="ranking_m_num" id="ranking_m_num" value="">
-                            <input type="text" class="text left half" name="ranking_m_day" id="ranking_m_day" value="">
+                            <input type="text" class="text" name="default_socialname" id="default_socialname" value="">
                         </div>
                     </div>
                     <div class="input_container">
-                        <label for="search_num">Search: </label>
-                        <div class="field_container">
-                            <input type="text" class="text left half" name="search_num" id="search_num" value="">
-                        </div>
-                    </div>
-                    <div class="input_container">
-                        <label for="search_m_num">Search(Media): </label>
-                        <div class="field_container">
-                            <input type="text" class="text left half" name="search_m_num" id="search_m_num" value="">
-                            <input type="text" class="text left half" name="search_m_day" id="search_m_day" value="">
+                        <label for="manage_pages">Manageable Pages: </label>
+                        <div class="clearfix"></div>
+                        <div style="margin-top:15px">
+                            <div class="brand_info_sel"></div>
+                            <input type="text" class="text" id="filterInput" placeholder="Search for names.." title="Type in a name">
+                            <div class="manage_pages_table">
+                            <table id="brand_info_table">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Brand</th>
+                                        <th>Permalink</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                <?php
+                                    $brand_info_list = sb_instagram_get_brand_info();
+                                    foreach($brand_info_list as $key => $brand_info_item){
+                                ?>
+                                    <tr>
+                                        <td><input type="checkbox" data-key="<?php echo $key?>" class="text input-checkbox" name="manage_pages[]" value=""></td>
+                                        <td><span class="brand_info_keyword_<?php echo $key?>"><?php echo $brand_info_item['keyword_name'] ;?></span></td>
+                                        <td><?php echo $brand_info_item['has_perm'] ;?></td>
+                                    </tr>
+                                <? }?>
+                                </tbody>
+                            </table>
+                            </div>
                         </div>
                     </div>
                     <div class="button_container">
@@ -3585,6 +3774,7 @@ function sb_instagram_admin_scripts() {
     wp_enqueue_script( 'sb_jquery_datatable', plugin_dir_url( __FILE__ ) . 'js/jquery.dataTables.js', false, SBIVER );
     wp_enqueue_script( 'sb_instagram_datatable', plugin_dir_url( __FILE__ ) . 'js/sb-datatable.js', false, SBIVER );
     wp_enqueue_script( 'sb_instagram_validator', plugin_dir_url( __FILE__ ) . 'js/jquery.validate.min.js', false, SBIVER );
+
     if( !wp_script_is('jquery-ui-draggable') ) {
         wp_enqueue_script(
             array(

@@ -941,4 +941,110 @@ jQuery(document).ready(function($) {
         });
     }
 
+    //Permission Management
+    if (jQuery("#table_permission").length) {
+        var table_permission = jQuery("#table_permission").dataTable({
+            "ajax": {
+                "url": ajax_url,
+                "data": function(d) {
+                    d.job = 'get_data';
+                    d.action = 'manage_permission';
+                },
+                "type": "post"
+            },
+            "columns": [
+                { "data": "id" },
+                { "data": "user_role" },
+                { "data": "excel_download" },
+                { "data": "label" },
+                { "data": "filter_media" },
+                { "data": "autoupdate" },
+                { "data": "default_socialname" },
+                { "data": "manage_pages" },
+                { "data": "functions", "sClass": "functions" }
+            ],
+            "aoColumnDefs": [
+                { "bSortable": false, "aTargets": [-1] }
+            ],
+            "lengthMenu": [
+                [10, 25, 50, 100, -1],
+                [10, 25, 50, 100, "All"]
+            ],
+            "oLanguage": {
+                "oPaginate": {
+                    "sFirst": " ",
+                    "sPrevious": " ",
+                    "sNext": " ",
+                    "sLast": " ",
+                },
+                "sLengthMenu": "Records per page: _MENU_",
+                "sInfo": "Total of _TOTAL_ records (showing _START_ to _END_)",
+                "sInfoFiltered": "(filtered from _MAX_ total records)"
+            }
+        });
+
+        var form_permission = $('#form_permission');
+        form_permission.validate();
+
+        // Edit button
+        $(document).on('click', '.function_edit a', function(e) {
+            e.preventDefault();
+            // Get user information from database
+            show_loading_message();
+            var id = $(this).data('id');
+            var is_excel_download = $(this).data('excel_download'),
+                is_label = $(this).data('label'),
+                is_filter_media = $(this).data('filter_media'),
+                is_autoupdate = $(this).data('autoupdate'),
+                val_default_socialname = $(this).data('default_socialname'),
+                val_manage_pages = $(this).data('manage_pages');
+
+                form_permission.attr('data-id', id);
+            $('.field_container label.error', form_permission).hide();
+            $('.field_container', form_permission).removeClass('valid').removeClass('error');
+
+            $('#is_excel_download', form_permission).val(is_excel_download);
+
+            hide_loading_message();
+            show_lightbox();
+
+        });
+
+        // Edit pagelimit submit form
+        $(document).on('submit', '#form_permission.edit', function(e) {
+            e.preventDefault();
+            // Validate form
+            if (form_permission.valid() == true) {
+                // Send user information to database
+                hide_ipad_keyboard();
+                hide_lightbox();
+                show_loading_message();
+                var id = form_permission.attr('data-id');
+                var form_data = form_permission.serialize() + '&action=manage_permission&job=edit_data&id=' + id;
+                var request = $.ajax({
+                    url: ajax_url,
+                    cache: false,
+                    data: form_data,
+                    type: 'post'
+                });
+                request.done(function(output) {
+                    output = JSON.parse(output);
+                    if (output.result == 'success') {
+                        // Reload datable
+                        table_permission.api().ajax.reload(function() {
+                            hide_loading_message();
+                            show_message("Role Permission has been changed successfully.", 'success');
+                        }, true);
+                    } else {
+                        hide_loading_message();
+                        show_message(output.message, 'error');
+                    }
+                });
+                request.fail(function(jqXHR, textStatus) {
+                    hide_loading_message();
+                    show_message('Edit request failed: ' + textStatus, 'error');
+                });
+            }
+        });
+    }
 });
