@@ -181,7 +181,7 @@ jQuery(document).ready(function($) {
     });
 
     jQuery(document).on('click', '[name="manage_pages[]"]', function() {
-        var id = jQuery(this).data('key');
+        var id = jQuery(this).data('post-id');
         var item = jQuery('.brand_info_keyword_'+id).html();
  
         if(jQuery('#brand_sel_item_'+id).length)

@@ -181,9 +181,28 @@ function get_recent_media($uid_arr, $atts, $options)
     }
     return extractKeyWords($text_result_arr);
 }
+
+function get_available_post_ids($user_roles){
+    global $wpdb;
+    $tmp_arr = [];
+    foreach($user_roles as $user_role_item)
+    {
+        $query = "SELECT * FROM wpsb_role_permissions WHERE role_id = '$user_role_item'";
+        $result = $wpdb->get_results($query);
+        foreach($result as $result_item)
+        {
+            $tmp_arr[] = $result_item->manage_pages;
+        }
+    }
+    $available_post_ids = explode(',',implode(',', $tmp_arr));
+    return $available_post_ids;
+}
 function display_sb_instagram_feed($atts, $content = null) {
     global $wpdb; 
     global $category_arr;
+    $current_user = wp_get_current_user();
+    $user_roles = $current_user->roles;
+
     /******************* SHORTCODE OPTIONS ********************/
     $page_id = get_the_ID();
 
@@ -205,6 +224,26 @@ function display_sb_instagram_feed($atts, $content = null) {
         {
             $include_keywords_custom = $atts['includewords'];
         }
+    }
+
+    if(isset($_POST['influencr_cost_save']))
+    {
+        $influencer_list = $_POST['influencer_list'];
+        $influencer_list_arr = explode(",",$influencer_list);
+
+        $tmp_arr = array();   
+        foreach( $influencer_list_arr as $key=>$influencer_id ) {
+            if(isset($_POST['cost_'.$influencer_id]))
+            {
+                $cost = $_POST['cost_'.$influencer_id];
+                $tmp_arr[] = '("'.$user_roles[0].'", "'.$page_id.'","'.$influencer_id.'","'.$cost.'")';  
+            }
+        }  
+        $delete_query = "DELETE FROM wpsb_role_influencers WHERE role_id IN ('".implode(',',$user_roles)."') AND post_id = ".$page_id." AND influencer NOT IN ('".$influencer_list."')";
+        // echo ($delete_query);die;
+        $wpdb->query($delete_query);
+        $query = 'INSERT INTO wpsb_role_influencers (role_id,post_id, influencer, cost) VALUES '.implode(',', $tmp_arr). ' ON DUPLICATE KEY UPDATE post_id=VALUES(post_id), influencer=VALUES(influencer), cost=VALUES(cost);';
+        $wpdb->query($query);
     }
     //Check Access_token Expire
     // $url = 'https://api.instagram.com/v1/users/self/?access_token=' . $options['sb_instagram_at'];
@@ -367,8 +406,6 @@ function display_sb_instagram_feed($atts, $content = null) {
     $ranking_media_view_limit_day = null;
     $search_media_view_limit_day = null;
 
-    $current_user = wp_get_current_user();
-    $user_roles = $current_user->roles;
     foreach ($user_roles as $role_item)
     {
         if(!isset($sb_page_limit[$role_item]))
@@ -867,11 +904,90 @@ function display_sb_instagram_feed($atts, $content = null) {
 //    if($page_id != 194 && $page_id != 1613)
     if($sb_instagram_post_style != 'list')
     {
+        $custom_analysis = false;
+        $custom_cost_arr = [];
+        if($sb_instagram_post_style == 'product')
+        {
+           
+            $available_post_ids = get_available_post_ids($user_roles);
+
+            if(in_array($page_id,$available_post_ids))
+            {
+                $query = "SELECT * from wpsb_tags";
+                $all_influencers = $wpdb->get_results($query);
+
+                $query = "SELECT a.*,b.username, b.tags FROM (SELECT * FROM wpsb_role_influencers ORDER BY cost desc) as a LEFT JOIN wpsb_tags as b ON a.influencer = b.userid WHERE a.role_id REGEXP '[[:<:]]".implode(',',$user_roles)."[[:>:]]' AND a.post_id = '$page_id' GROUP BY a.post_id,a.influencer";
+                $influencer_id_arr = $wpdb->get_results($query);
+
+                $sb_instagram_content .='<form action="" method="post">';
+                $sb_instagram_content .= '<div class="row"><button class="pull-right btn btn-danger custom_inf_button" type="button" data-toggle="modal" data-target="#influcnerModal">MY INFLUENCERS</button></div>';
+                $sb_instagram_content .= '<div class="modal fade" id="influcnerModal" tabindex="-1" role="dialog" aria-labelledby="influcnerModal" aria-hidden="true">'.
+                    '<div class="modal-dialog" role="document">'.
+                    '<div class="modal-content">'.
+                    '<div class="modal-header">'.
+                    '<h2 class="modal-title" id="exampleModalLabel">My Influcners</h2>'.
+                    '<button type="button" class="close" data-dismiss="modal" aria-label="Close">'.
+                    '<span aria-hidden="true">&times;</span>'.
+                    '</button>'.
+                    '</div>'.
+                    '<div class="modal-body">'.
+                    '<select class="influencer_select" data-style="btn-danger" data-live-search="true">';
+                foreach($all_influencers as $item)
+                {     
+                    $sb_instagram_content .='<option data-id="'.$item->userid.'" data-tokens="'.$item->username.'">@'.$item->username.'</option>';
+                }
+                $sb_instagram_content .= '</select>'.
+                    '<table>'.
+                    '<thead>'.
+                    '<tr>'.
+                    '<th>INFLUENCER</th>'.
+                    '<th>COST PER POST</th>'.
+                    '<th></th>'.
+                    '</tr>'.
+                    '</thead>'.
+                    '<tbody>'.
+                    '<tr>';
+                $influencer_id_arr_str = '';
+                foreach($influencer_id_arr as $influencer_item)
+                {
+                    $sb_instagram_content .= '<td>@'.$influencer_item->username.'</td>'.
+                    '<td><input class="influcner_sel_item" data-id="'.$influencer_item->influencer.'" name="cost_'.$influencer_item->influencer.'" type="text" value="'.$influencer_item->cost.'"></td>'.
+                    '<td><button type="button" data-id="'.$influencer_item->influencer.'" class="remove_influencer_btn btn btn-danger btn-xs btn-custom-xs"><i class="fa fa-close"></i></button></td>'.
+                    '</tr>';
+                    $influencer_id_arr_str .= $influencer_item->influencer .',';
+                    $custom_cost_arr[$influencer_item->influencer] = array(
+                        'influencer' => $influencer_item->influencer,
+                        'influencer_name' => $influencer_item->username,
+                        'cost' => $influencer_item->cost
+                        );
+                }
+
+                $influencer_id_arr_str = substr($influencer_id_arr_str,0, -1);
+                $sb_instagram_content .= '</tbody>'.
+                    '</table>'.
+                    '</div>'.
+                    '<div class="modal-footer">'.
+                    '<input type="hidden" name="influencer_list" value="'.$influencer_id_arr_str.'"/>'.
+                    '<button type="submit" class="btn btn-danger" name="influencr_cost_save">Save</button>'.
+                    '</div>'.
+                    '</div>'.
+                    '</div>'.
+                    '</div>'.
+                    '</form>';
+
+                if($influencer_id_arr_str !='')
+                {
+                    $sb_instagram_user_id = $influencer_id_arr_str;
+                    $custom_analysis = true;
+                }
+            }
+        }
+        $custom_cost_arr = json_encode($custom_cost_arr);
         $sb_instagram_content .= '<div id="sb_instagram" class="sbi' . $sbi_class . $sb_instagram_disable_mobile;
         if ( !empty($sb_instagram_height) ) $sb_instagram_content .= ' sbi_fixed_height ';
         $sb_instagram_content .= ' sbi_col_' . trim($sb_instagram_cols_class);
         if ( $sb_instagram_width_resp ) $sb_instagram_content .= ' sbi_width_resp';
-        $sb_instagram_content .= '" '.$sb_instagram_styles .' data-post-style="' . $sb_instagram_post_style . '" data-id="' . $sb_instagram_user_id . '" data-num="' . trim($atts['num']) . '" data-res="' . trim($atts['imageres']) . '" data-cols="' . trim($sb_instagram_cols) . '" data-options=\'{&quot;showcaption&quot;: &quot;'.$sb_instagram_show_caption.'&quot;, &quot;captionlength&quot;: &quot;'.$sb_instagram_caption_length.'&quot;, &quot;captioncolor&quot;: &quot;'.$sb_instagram_caption_color.'&quot;, &quot;captionsize&quot;: &quot;'.$sb_instagram_caption_size.'&quot;, &quot;showlikes&quot;: &quot;'.$sb_instagram_show_meta.'&quot;, &quot;likescolor&quot;: &quot;'.$sb_instagram_meta_color.'&quot;, &quot;likessize&quot;: &quot;'.$sb_instagram_meta_size.'&quot;, &quot;sortby&quot;: &quot;'.$atts['sortby'].'&quot;, &quot;hashtag&quot;: &quot;'.$sb_instagram_hashtag.'&quot;, &quot;type&quot;: &quot;'.$sb_instagram_type.'&quot;, &quot;hovercolor&quot;: &quot;'.sbi_hextorgb($sb_hover_background).'&quot;, &quot;hovertextcolor&quot;: &quot;'.sbi_hextorgb($sb_hover_text).'&quot;, &quot;hoverdisplay&quot;: &quot;'.$atts['hoverdisplay'].'&quot;, &quot;hovereffect&quot;: &quot;'.$atts['hovereffect'].'&quot;, &quot;headercolor&quot;: &quot;'.$sb_instagram_header_color.'&quot;, &quot;headerprimarycolor&quot;: &quot;'.$sb_instagram_header_primary_color.'&quot;, &quot;headersecondarycolor&quot;: &quot;'.$sb_instagram_header_secondary_color.'&quot;, &quot;disablelightbox&quot;: &quot;'.$sb_instagram_disable_lightbox.'&quot;, &quot;disablecache&quot;: &quot;'.$sb_instagram_disable_cache.'&quot;, &quot;location&quot;: &quot;'.$sb_instagram_location.'&quot;, &quot;coordinates&quot;: &quot;'.$sb_instagram_coordinates.'&quot;, &quot;single&quot;: &quot;'.$sb_instagram_single.'&quot;, &quot;maxrequests&quot;: &quot;'.$sb_instagram_requests_max.'&quot;, &quot;headerstyle&quot;: &quot;'.$sb_instagram_header_style.'&quot;, &quot;showfollowers&quot;: &quot;'.$sb_instagram_show_followers.'&quot;, &quot;showbio&quot;: &quot;'.$sb_instagram_show_bio.'&quot;, &quot;carousel&quot;: &quot;['.$sbi_carousel.', '.$sb_instagram_carousel_arrows.', '.$sb_instagram_carousel_pag.', '.$sb_instagram_carousel_autoplay.', '.$sb_instagram_carousel_interval.']&quot;, &quot;imagepadding&quot;: &quot;'.$sb_instagram_image_padding.'&quot;, &quot;imagepaddingunit&quot;: &quot;'.$sb_instagram_image_padding_unit.'&quot;, &quot;media&quot;: &quot;'.$sb_instagram_media_type.'&quot;, &quot;includewords&quot;: &quot;'.$sb_instagram_include_words.'&quot;, &quot;post_style&quot;: &quot;'.$sb_instagram_post_style.'&quot;, &quot;excludewords&quot;: &quot;'.$sb_instagram_exclude_words.'&quot;, &quot;sbiCacheExists&quot;: &quot;'.$sbi_cache_exists.'&quot;, &quot;sbiHeaderCache&quot;: &quot;'.$sbiHeaderCache.'&quot;, &quot;sbiHeaderTitle&quot;: &quot;'.$page_title.'&quot;, &quot;sbiKeywordType&quot;: &quot;'.$keywordType.'&quot;, &quot;sbiPageType&quot;: &quot;'.$pageType.'&quot;, &quot;sbiMediaDays&quot;: &quot;'.$mediaDays.'&quot;, &quot;sbiShowAvatar&quot;: &quot;'.$showAvatar.'&quot;,&quot;sbiShowHighlight&quot;: &quot;'.$showhighlight.'&quot;}\'>';
+        $sb_instagram_content .= '" '.$sb_instagram_styles .' data-post-style="' . $sb_instagram_post_style . '" data-id="' . $sb_instagram_user_id . '" data-num="' . trim($atts['num']) . '" data-res="' . trim($atts['imageres']) . '" data-cols="' . trim($sb_instagram_cols) . '" data-cost-arr =\''.trim($custom_cost_arr).'\' data-options=\'{&quot;showcaption&quot;: &quot;'.$sb_instagram_show_caption.'&quot;, &quot;captionlength&quot;: &quot;'.$sb_instagram_caption_length.'&quot;, &quot;captioncolor&quot;: &quot;'.$sb_instagram_caption_color.'&quot;, &quot;captionsize&quot;: &quot;'.$sb_instagram_caption_size.'&quot;, &quot;showlikes&quot;: &quot;'.$sb_instagram_show_meta.'&quot;, &quot;likescolor&quot;: &quot;'.$sb_instagram_meta_color.'&quot;, &quot;likessize&quot;: &quot;'.$sb_instagram_meta_size.'&quot;, &quot;sortby&quot;: &quot;'.$atts['sortby'].'&quot;, &quot;hashtag&quot;: &quot;'.$sb_instagram_hashtag.'&quot;, &quot;type&quot;: &quot;'.$sb_instagram_type.'&quot;, &quot;hovercolor&quot;: &quot;'.sbi_hextorgb($sb_hover_background).'&quot;, &quot;hovertextcolor&quot;: &quot;'.sbi_hextorgb($sb_hover_text).'&quot;, &quot;hoverdisplay&quot;: &quot;'.$atts['hoverdisplay'].'&quot;, &quot;hovereffect&quot;: &quot;'.$atts['hovereffect'].'&quot;, &quot;headercolor&quot;: &quot;'.$sb_instagram_header_color.'&quot;, &quot;headerprimarycolor&quot;: &quot;'.$sb_instagram_header_primary_color.'&quot;, &quot;headersecondarycolor&quot;: &quot;'.$sb_instagram_header_secondary_color.'&quot;, &quot;disablelightbox&quot;: &quot;'.$sb_instagram_disable_lightbox.'&quot;, &quot;disablecache&quot;: &quot;'.$sb_instagram_disable_cache.'&quot;, &quot;location&quot;: &quot;'.$sb_instagram_location.'&quot;, &quot;coordinates&quot;: &quot;'.$sb_instagram_coordinates.'&quot;, &quot;single&quot;: &quot;'.$sb_instagram_single.'&quot;, &quot;maxrequests&quot;: &quot;'.$sb_instagram_requests_max.'&quot;, &quot;headerstyle&quot;: &quot;'.$sb_instagram_header_style.'&quot;, &quot;showfollowers&quot;: &quot;'.$sb_instagram_show_followers.'&quot;, &quot;showbio&quot;: &quot;'.$sb_instagram_show_bio.'&quot;, &quot;carousel&quot;: &quot;['.$sbi_carousel.', '.$sb_instagram_carousel_arrows.', '.$sb_instagram_carousel_pag.', '.$sb_instagram_carousel_autoplay.', '.$sb_instagram_carousel_interval.']&quot;, &quot;imagepadding&quot;: &quot;'.$sb_instagram_image_padding.'&quot;, &quot;imagepaddingunit&quot;: &quot;'.$sb_instagram_image_padding_unit.'&quot;, &quot;media&quot;: &quot;'.$sb_instagram_media_type.'&quot;, &quot;includewords&quot;: &quot;'.$sb_instagram_include_words.'&quot;, &quot;post_style&quot;: &quot;'.$sb_instagram_post_style.'&quot;, &quot;excludewords&quot;: &quot;'.$sb_instagram_exclude_words.'&quot;, &quot;sbiCacheExists&quot;: &quot;'.$sbi_cache_exists.'&quot;, &quot;sbiHeaderCache&quot;: &quot;'.$sbiHeaderCache.'&quot;, &quot;sbiHeaderTitle&quot;: &quot;'.$page_title.'&quot;, &quot;sbiKeywordType&quot;: &quot;'.$keywordType.'&quot;, &quot;sbiPageType&quot;: &quot;'.$pageType.'&quot;, &quot;sbiMediaDays&quot;: &quot;'.$mediaDays.'&quot;, &quot;sbiShowAvatar&quot;: &quot;'.$showAvatar.'&quot;,&quot;sbiShowHighlight&quot;: &quot;'.$showhighlight.'&quot;,&quot;sbiCustomAnalysis&quot;: &quot;'.$custom_analysis.'&quot;}\'>';
 
         //Header
         if( $sb_instagram_show_header ){
@@ -1516,6 +1632,17 @@ function save_export_data()
     die();
 }
 
+add_action('wp_ajax_test', 'test');
+function test(){
+    $a = array();
+    $a[] = array(
+        'id'=>'1',
+        'name' => 'test',
+        'slub' => 'sdf'
+        );
+    echo(json_encode($a));die;
+}
+
 add_action('wp_ajax_export_file', 'export_file');
 function export_file()
 {
@@ -1537,9 +1664,12 @@ function sb_instagram_styles_enqueue() {
     wp_enqueue_style( 'sb_instagram_ui_styles' );
     wp_register_style( 'sb_instagram_ui_styles', plugins_url('css/jquery-ui.css', __FILE__), array(), SBIVER );
     wp_enqueue_style( 'sb_instagram_ui_styles' );
-    wp_register_style( 'sb_instagram_bootstrap_styles', plugins_url('assets/bootstrap/css/bootstrap.min.css', __FILE__), array(), SBIVER );
+    wp_register_style( 'sb_instagram_bootstrap_styles', plugins_url('assets/bootstrap/css/bootstrap.css', __FILE__), array(), SBIVER );
     wp_enqueue_style( 'sb_instagram_bootstrap_styles' );
-    wp_register_style( 'sb_instagram_bsselect_styles', plugins_url('assets/bootstrap-select/bootstrap-select.min.css', __FILE__), array(), SBIVER );
+    wp_register_style( 'sb_instagram_select2_styles', plugins_url('assets/select2/css/select2.css', __FILE__), array(), SBIVER );
+    wp_enqueue_style( 'sb_instagram_select2_styles' );
+
+    wp_register_style( 'sb_instagram_bsselect_styles', plugins_url('assets/bootstrap-select/bootstrap-select.css', __FILE__), array(), SBIVER );
     wp_enqueue_style( 'sb_instagram_bsselect_styles' );
 
     $sb_instagram_settings = get_option('sb_instagram_settings');
@@ -1559,7 +1689,8 @@ function sb_instagram_scripts_enqueue() {
     wp_register_script( 'sb_instagram_scripts_dropdown', plugins_url( '/js/jquery.dropdown.min.js' , __FILE__ ), array('jquery'), SBIVER, true );
     wp_register_script( 'sb_instagram_scripts_ui', plugins_url( '/js/jquery-ui.js' , __FILE__ ), array('jquery'), SBIVER, true );
     wp_register_script( 'sb_instagram_scripts_bs', plugins_url( 'assets/bootstrap/js/bootstrap.min.js' , __FILE__ ), array('jquery'), SBIVER, true );
-    wp_register_script( 'sb_instagram_scripts_bs_select', plugins_url( 'assets/bootstrap-select/bootstrap-select.min.js' , __FILE__ ), array('jquery'), SBIVER, true );
+    wp_register_script( 'sb_instagram_scripts_bs_select', plugins_url( 'assets/bootstrap-select/bootstrap-select.js' , __FILE__ ), array('jquery'), SBIVER, true );
+    wp_register_script( 'sb_instagram_scripts_select2', plugins_url( 'assets/select2/js/select2.js' , __FILE__ ), array('jquery'), SBIVER, true );
 
     if($page_id == 3046)
     {
@@ -1595,6 +1726,7 @@ function sb_instagram_scripts_enqueue() {
         wp_enqueue_script('sb_instagram_scripts_dropdown');
         wp_enqueue_script('sb_instagram_scripts_ui');
         wp_enqueue_script('sb_instagram_scripts_bs');
+        wp_enqueue_script('sb_instagram_scripts_select2');
         wp_enqueue_script('sb_instagram_scripts_bs_select');
         if($page_id == 3046)
         {

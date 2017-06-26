@@ -1895,3 +1895,56 @@ width: 210px !important;
     -moz-border-radius: 0px;
     border-radius: 0px;
 }
+
+.custom_inf_button{
+  -webkit-border-radius: 0px !important;
+    -moz-border-radius: 0px !important;
+    border-radius: 0px !important;
+    margin-right:20px;
+
+    font-family: "PT Sans Narrow", Arial, "Helvetica Neue", Helvetica, sans-serif;
+    font-size: 20px;
+    line-height: 36px;
+    letter-spacing: 0.8px;
+    font-weight: 400;
+    font-style: normal;
+    text-transform: uppercase;
+    text-decoration: none;
+}
+#influcnerModal .modal-body{
+  text-align: center;
+}
+#influcnerModal .modal-body .bootstrap-select{
+  width:300px;
+}
+#influcnerModal .modal-body table{
+  width:80%;
+  margin:auto;
+}
+
+#influcnerModal .modal-body table{
+  margin-top:50px;
+}
+
+#influcnerModal .modal-body table tr,
+#influcnerModal .modal-body table th,
+#influcnerModal .modal-body table td{
+  border:none !important;
+  text-align: center;
+  font-size:19px;
+  padding:6px;
+}
+
+#influcnerModal .modal-body table th{
+  color:#333;
+  font-size:22px;
+}
+#influcnerModal .modal-body table td input[type="text"]{
+  width:125px;
+  border:2px solid;
+  text-align: center;
+} 
+#influcnerModal .modal-body table td {
+  text-transform: uppercase;
+} 
+

@@ -437,7 +437,11 @@ if(!sbi_js_exists){
                         sbiHeaderCache = feedOptions.sbiHeaderCache,
                         media = feedOptions.media,
                         sbiShowAvatar = feedOptions.sbiShowAvatar,
-                        sbiShowHighlight = feedOptions.sbiShowHighlight;
+                        sbiShowHighlight = feedOptions.sbiShowHighlight,
+                        sbiCustomAnalysis = feedOptions.sbiCustomAnalysis;
+
+                    var CostArr = JSON.parse( var_this.getAttribute('data-cost-arr'));
+
                     var sbiSinceTime = null;
                     if(!isNaN(sbiDays) && sbiDays)
                         sbiSinceTime = Math.floor(Date.now() / 1000 - 24*60*60*sbiDays);
@@ -1351,17 +1355,17 @@ if(!sbi_js_exists){
 
                             if(post_style == 'product' || post_style == 'product_influencer' ) {
 
-                                jQuery.ajax({
-                                    method: "POST",
-                                    async: false,
-                                    url: ajax_video_url,
-                                    data: {media: sbi_item_str},
-                                    success: function (response) {
-                                        var response_json = JSON.parse(response);
-                                        sbiAddViewCount(response_json);
-                                        post_sytle_view_data = response_json.data;
-                                    }
-                                });
+                                // jQuery.ajax({
+                                //     method: "POST",
+                                //     async: false,
+                                //     url: ajax_video_url,
+                                //     data: {media: sbi_item_str},
+                                //     success: function (response) {
+                                //         var response_json = JSON.parse(response);
+                                //         sbiAddViewCount(response_json);
+                                //         post_sytle_view_data = response_json.data;
+                                //     }
+                                // });
                             }
 
                             sbiAfterImagesLoaded();
@@ -1462,23 +1466,60 @@ if(!sbi_js_exists){
 
                                     var sorted=[];
                                     for(i=0;i<len;i++)
-                                        sorted.push([post_style_info[keys[i]]['username'],post_style_info[keys[i]]['ints']/post_style_info[keys[i]]['posts'],keys[i]]);
+                                        sorted.push([post_style_info[keys[i]]['username'],post_style_info[keys[i]]['ints']/post_style_info[keys[i]]['posts'],keys[i],post_style_info[keys[i]]['posts']*CostArr[keys[i]].cost]);
                                     sorted.sort(function(a,b){return b[1] - a[1]});
 
                                     var dropdown_div = '<div class="dropdown" style="display:inline"><button class="btn btn-danger dropdown-toggle dropdown-title-span" type="button" data-toggle="dropdown">' + post_style_global['users'] + ' '+feedOptions.sbiKeywordType +'<i class="caret" style="margin-left:6px"></i></button><ul class="dropdown-menu"  style="list-style-type: none;"><li><a class="jquery-dropdown-item" href="#sb_instagram" data-user-name="" data-user-id="">'+post_style_global['users'] + ' '+feedOptions.sbiKeywordType +'</a></li>';
                                     
-                                    post_style_header_add = '';
-                                    for(i=0;i<len;i++){
-                                        //add usernames and posts of users
-                                        post_style_header_add += '<strong>' + sorted[i][0] + '</strong>: ' + kFormatter(sorted[i][1]) +  ' | ';
+                                    if(sbiCustomAnalysis)
+                                    {
+                                        post_style_header_add = '<table><thead><tr><th>Indicador</th>';
+                                        for(i=0;i<len;i++){
+                                            var tmp_influencer_id = sorted[i][2];
+                                            //add usernames and posts of users
 
-                                        //now add usernames to dropdown
-                                        dropdown_div +='<li><a class="jquery-dropdown-item" href="#sb_instagram" data-user-name="'+sorted[i][0].toLowerCase()+'" data-user-id="'+sorted[i][2]+'">'+sorted[i][0]+'</a></li>'
+                                            post_style_header_add += '<th>'+CostArr[tmp_influencer_id].influencer_name+'</th>';
+                                            //now add usernames to dropdown
+                                            dropdown_div +='<li><a class="jquery-dropdown-item" href="#sb_instagram" data-user-name="'+sorted[i][0].toLowerCase()+'" data-user-id="'+sorted[i][2]+'">'+sorted[i][0]+'</a></li>'
+                                        }
+
+                                        post_style_header_add += '<tr></thead><tbody><tr><td>Int./Post</td>';
+                                        //Ineratction
+                                        for(i=0;i<len;i++){
+                                            post_style_header_add += '<td>'+kFormatter(sorted[i][1]) +'</td>';
+                                        }
+                                        //Cost
+                                        post_style_header_add += '</tr><tr><td>Cost/Int.</td>';
+                                        for(i=0;i<len;i++){
+                                            var tmp_influencer_id = sorted[i][2];
+                                            //add usernames and posts of users
+
+                                            post_style_header_add += '<td>'+sorted[i][3]/sorted[i][1]+'</td>';
+                                        }
+                                        //Int Dollar
+                                        post_style_header_add += '</tr><tr><td>Int./Dolar</td>';
+                                        for(i=0;i<len;i++){
+                                            var tmp_influencer_id = sorted[i][2];
+                                            //add usernames and posts of users
+
+                                            post_style_header_add += '<td>'+sorted[i][1]/sorted[i][3]+'</td>';
+                                        }
+                                        post_style_header_add += '</tr></tbody>';
+                                        post_style_header_add += '</table>';
+                                    }else{
+                                        for(i=0;i<len;i++){
+                                            //add usernames and posts of users
+                                            post_style_header_add += '<strong>' + sorted[i][0] + '</strong>: ' + kFormatter(sorted[i][1]) +  ' | ';
+
+                                            //now add usernames to dropdown
+                                            dropdown_div +='<li><a class="jquery-dropdown-item" href="#sb_instagram" data-user-name="'+sorted[i][0].toLowerCase()+'" data-user-id="'+sorted[i][2]+'">'+sorted[i][0]+'</a></li>'
+                                        }
                                     }
+                                    
                                     dropdown_div += '</ul></div>';
 
 
-                                    post_style_header += '<h3 style="text-align:center;font-size:26px;fone-weight:700">' +feedOptions.sbiHeaderTitle+' </h3><h3 style="text-align: center;" >'+dropdown_div+'<span id="dropdown_posts">' + post_style_global['posts'] + '</span> Posts<span id="dropdown_likes">' + commaSeparateNumber(post_style_global['ints']) + '</span> Int. '+ viewCoutnHtml +'</h3><div id="myChart_wrapper_div" style="width:100%;margin:auto;"><canvas id="myChart"></canvas></div><h3 style="text-align:center;font-weight:bold;">RENDIMIENTO (INT./POST)</h3><h5 id="dropdown_statistics" style="text-align:center;">' + post_style_header_add;
+                                    post_style_header += '<h3 style="text-align:center;font-size:26px;fone-weight:700">' +feedOptions.sbiHeaderTitle+' </h3><h3 style="text-align: center;" >'+dropdown_div+'<span id="dropdown_posts">' + post_style_global['posts'] + '</span> Posts<span id="dropdown_likes">' + commaSeparateNumber(post_style_global['ints']) + '</span> Int. '+ viewCoutnHtml +'</h3><div id="myChart_wrapper_div" style="width:100%;margin:auto;"><canvas id="myChart"></canvas></div><h3 style="text-align:center;font-weight:bold;">RENDIMIENTO (INT./POST)</h3><div id="dropdown_statistics" style="text-align:center;">' + post_style_header_add;
                                     
 /*  
                                     for (i = 0; i < len; i++) {
@@ -1488,7 +1529,7 @@ if(!sbi_js_exists){
                                     }
                                     */
                                     jQuery('.post_style_header').remove();
-                                    jQuery('#sb_instagram').prepend(post_style_header.slice(0, -3) + '</h5></div>');
+                                    jQuery('#sb_instagram').prepend(post_style_header.slice(0, -3) + '</div></div>');
                                     //LINK DROPDOWN ITEM TO HANDLER
                                     jQuery('#sb_instagram').find('.jquery-dropdown-item')
                                         .on('click', function() {
@@ -1505,7 +1546,7 @@ if(!sbi_js_exists){
                                                 jQuery('#sbi_images .sbi_user_' + dd_user_name).show();
                                                 jQuery('#dropdown_posts').html(post_style_info[dd_user_id]['posts']);
                                                 jQuery('#dropdown_likes').html(post_style_info[dd_user_id]['ints']);
-                                                jQuery('#dropdown_statistics').html('<strong>'+dd_user_name+'</strong>: '+kFormatter(post_style_info[dd_user_id]['ints']/post_style_info[dd_user_id]['posts']));
+                                                // jQuery('#dropdown_statistics').html('<strong>'+dd_user_name+'</strong>: '+kFormatter(post_style_info[dd_user_id]['ints']/post_style_info[dd_user_id]['posts']));
 
                                                 foreach_Object = jQuery('#sbi_images .sbi_user_' + dd_user_name);
                                                 draw_chart(dd_user_id);
@@ -1521,12 +1562,12 @@ if(!sbi_js_exists){
                                                     sorted.push([post_style_info[keys[i]]['username'],post_style_info[keys[i]]['ints']/post_style_info[keys[i]]['posts'],keys[i]]);
                                                 sorted.sort(function(a,b){return b[1] - a[1]});
 
-                                                var tmp_stats = '';
-                                                for(i=0;i<len;i++){
-                                                    //add usernames and posts of users
-                                                    tmp_stats += '<strong>' + sorted[i][0] + '</strong>: ' + kFormatter(sorted[i][1]) +  ' | ';
-                                                }
-                                                jQuery('#dropdown_statistics').html(tmp_stats.slice(0,-3));
+                                                // var tmp_stats = '';
+                                                // for(i=0;i<len;i++){
+                                                //     //add usernames and posts of users
+                                                //     tmp_stats += '<strong>' + sorted[i][0] + '</strong>: ' + kFormatter(sorted[i][1]) +  ' | ';
+                                                // }
+                                                // jQuery('#dropdown_statistics').html(tmp_stats.slice(0,-3));
                                                 foreach_Object = jQuery('#sbi_images .sbi_item');
 
                                                 draw_chart();
@@ -2822,6 +2863,36 @@ if(!sbi_js_exists){
 
 	jQuery( document ).ready(function() {
 		sbi_init();
+        jQuery('.influencer_select').selectpicker({
+          style: 'btn-danger',
+          size: 10
+        });
+
+        jQuery('.influencer_select').on('change',function(e){
+            if(e.isTrigger != 3)
+                return false;
+            var influencer_id =  jQuery('.influencer_select option:selected').data('id'),
+                influencer_name = jQuery('.influencer_select option:selected').data('tokens'),
+                influencer_list = [];
+            var appendItem = '<tr>'+
+                '<td>@'+influencer_name+'</td>'+
+                '<td><input class="influcner_sel_item" data-id="'+influencer_id+'" name="cost_'+influencer_id+'" type="text" value=""></td>'+
+                '<td><button type="button" data-id="'+influencer_id+'" class="remove_influencer_btn btn btn-danger btn-xs btn-custom-xs"><i class="fa fa-close"></i></button></td>'+
+                '</tr>';
+            if(jQuery('input[name="cost_'+influencer_id+'"').length == 0)
+                jQuery('tbody',influcnerModal).append(appendItem)
+
+            influencer_list = jQuery(document).find(".influcner_sel_item").map( function() { return jQuery(this).data('id'); } ).get();
+            influencer_list_str = influencer_list.join(',');
+            jQuery('[name="influencer_list"]').val(influencer_list_str);
+        });
+        jQuery(document).on('click','.remove_influencer_btn',function(){
+            var influencer_id = jQuery(this).data('id');
+            jQuery('input[name="cost_'+influencer_id+'"').parents('tr').remove();
+            influencer_list = jQuery(document).find(".influcner_sel_item").map( function() { return jQuery(this).data('id'); } ).get();
+            influencer_list_str = influencer_list.join(',');
+            jQuery('[name="influencer_list"]').val(influencer_list_str);
+        });
         jQuery(".export_but").click(function(){
             var tmp_arr = {};
             tmp_arr['header'] = export_table_header_data;

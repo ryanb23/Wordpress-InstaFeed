@@ -997,9 +997,31 @@ jQuery(document).ready(function($) {
                 is_filter_media = $(this).data('filter_media'),
                 is_autoupdate = $(this).data('autoupdate'),
                 val_default_socialname = $(this).data('default_socialname'),
-                val_manage_pages = $(this).data('manage_pages');
+                val_manage_pages = $(this).data('manage_pages').toString();
 
-                form_permission.attr('data-id', id);
+            form_permission.attr('data-id', id);
+            $('#excel_download', form_token).prop("checked", is_excel_download);
+            $('#label', form_token).prop("checked", is_label);
+            $('#filter_media', form_token).prop("checked", is_filter_media);
+            $('#autoupdate', form_token).prop("checked", is_autoupdate);
+            $('#default_socialname', form_token).val(val_default_socialname);
+            $('#role_id', form_token).html(id);
+
+            console.log(val_manage_pages);
+            if(val_manage_pages == '')
+                $tmp_arr = [];
+            else
+                $tmp_arr = val_manage_pages.split(',');
+            $selected_brands = [];
+            $(".brand_check_box").prop("checked", 0);
+            $('.brand_info_sel').empty();
+            for(var i=0; i<$tmp_arr.length; i++)
+            {
+                $item = $("[data-post-id='"+ $tmp_arr[i] + "']");
+                $item.prop("checked", 1);
+                $('.brand_info_sel').append("<span class='brand_sel_item' id='brand_sel_item_"+$tmp_arr[i]+"'>"+$item.data('keyword-name')+"</span>");
+            }
+
             $('.field_container label.error', form_permission).hide();
             $('.field_container', form_permission).removeClass('valid').removeClass('error');
 
