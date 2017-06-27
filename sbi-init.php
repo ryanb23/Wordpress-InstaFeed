@@ -951,18 +951,19 @@ function display_sb_instagram_feed($atts, $content = null) {
                 $influencer_id_arr = $wpdb->get_results($query);
 
                 $sb_instagram_content .='<form action="" method="post">';
-                $sb_instagram_content .= '<div class="row"><button class="pull-right btn btn-danger custom_inf_button" type="button" data-toggle="modal" data-target="#influcnerModal">MY INFLUENCERS</button></div>';
+                $sb_instagram_content .= '<div class="row"><button class="pull-right btn btn-danger custom_inf_button" type="button" data-toggle="modal" data-target="#influcnerModal">MIS INFLUENCERS</button></div>';
                 $sb_instagram_content .= '<div class="modal fade" id="influcnerModal" tabindex="-1" role="dialog" aria-labelledby="influcnerModal" aria-hidden="true">'.
                     '<div class="modal-dialog" role="document">'.
                     '<div class="modal-content">'.
                     '<div class="modal-header">'.
-                    '<h2 class="modal-title" id="exampleModalLabel">My Influcners</h2>'.
+                    '<h2 class="modal-title" id="exampleModalLabel">MIS INFLUENCERS</h2>'.
                     '<button type="button" class="close" data-dismiss="modal" aria-label="Close">'.
                     '<span aria-hidden="true">&times;</span>'.
                     '</button>'.
                     '</div>'.
                     '<div class="modal-body">'.
-                    '<select class="influencer_select" data-style="btn-danger" data-live-search="true">';
+                    '<select class="influencer_select" data-style="btn-danger" data-live-search="true">'.
+                    '<option data-id="0">Agregar Influencers</option>';
                 foreach($all_influencers as $item)
                 {     
                     $sb_instagram_content .='<option data-id="'.$item->userid.'" data-tokens="'.$item->username.'">'.$item->username.'</option>';
@@ -972,7 +973,7 @@ function display_sb_instagram_feed($atts, $content = null) {
                     '<thead>'.
                     '<tr>'.
                     '<th>INFLUENCER</th>'.
-                    '<th>COST PER POST</th>'.
+                    '<th>COSTO POR POST</th>'.
                     '<th></th>'.
                     '</tr>'.
                     '</thead>'.
@@ -999,7 +1000,7 @@ function display_sb_instagram_feed($atts, $content = null) {
                     '</div>'.
                     '<div class="modal-footer">'.
                     '<input type="hidden" name="influencer_list" value="'.$influencer_id_arr_str.'"/>'.
-                    '<button type="submit" class="btn btn-danger" name="influencr_cost_save">Save</button>'.
+                    '<button type="submit" class="btn btn-danger" name="influencr_cost_save">GUARDAR</button>'.
                     '</div>'.
                     '</div>'.
                     '</div>'.

@@ -1523,7 +1523,7 @@ if(!sbi_js_exists){
                                     dropdown_div += '</ul></div>';
 
 
-                                    post_style_header += '<h3 style="text-align:center;font-size:26px;fone-weight:700">' +feedOptions.sbiHeaderTitle+' </h3><h3 style="text-align: center;" >'+dropdown_div+'<span id="dropdown_posts">' + post_style_global['posts'] + '</span> Posts<span id="dropdown_likes">' + commaSeparateNumber(post_style_global['ints']) + '</span> Int. '+ viewCoutnHtml +'</h3><div id="myChart_wrapper_div" style="width:100%;margin:auto;"><canvas id="myChart"></canvas></div><h3 style="text-align:center;font-weight:bold;">RENDIMIENTO (INT./POST)</h3><h5 id="dropdown_statistics" style="text-align:center;">' + post_style_header_add;
+                                    post_style_header += '<h3 style="text-align:center;font-size:26px;fone-weight:700">' +feedOptions.sbiHeaderTitle+' </h3><h3 style="text-align: center;" >'+dropdown_div+'<span id="dropdown_posts">' + post_style_global['posts'] + '</span> Posts<span id="dropdown_likes">' + commaSeparateNumber(post_style_global['ints']) + '</span> Int. '+ viewCoutnHtml +'</h3><div id="myChart_wrapper_div" style="width:100%;margin:auto;"><canvas id="myChart"></canvas></div><h3 style="text-align:center;font-weight:bold;">RENDIMIENTO </h3><h5 id="dropdown_statistics" style="text-align:center;">' + post_style_header_add;
                                     
 /*  
                                     for (i = 0; i < len; i++) {
@@ -1823,7 +1823,7 @@ if(!sbi_js_exists){
                                     }
                                     dropdown_div += '</ul></div>';
 
-                                    post_style_influencer_header += '<h3 style="text-align:center;font-size:26px;">' +feedOptions.sbiHeaderTitle+' </h3><h3 style="text-align: center;">'+dropdown_div+'<span id="dropdown_posts">' + post_style_influencer_global['posts'] + '</span> Posts<span id="dropdown_likes">' + commaSeparateNumber(post_style_influencer_global['ints']) + '</span> INT.'+viewCoutnHtml+'</h3><div id="myChart_wrapper_div" style="width:100%;margin:auto;"><canvas id="myChart"></canvas></div></div><h3 style="text-align:center;">RENDIMIENTO (INT./POST)</h3><h5 id="dropdown_statistics" style="text-align:center;">' + post_style_influencer_header_add;
+                                    post_style_influencer_header += '<h3 style="text-align:center;font-size:26px;">' +feedOptions.sbiHeaderTitle+' </h3><h3 style="text-align: center;">'+dropdown_div+'<span id="dropdown_posts">' + post_style_influencer_global['posts'] + '</span> Posts<span id="dropdown_likes">' + commaSeparateNumber(post_style_influencer_global['ints']) + '</span> INT.'+viewCoutnHtml+'</h3><div id="myChart_wrapper_div" style="width:100%;margin:auto;"><canvas id="myChart"></canvas></div></div><h3 style="text-align:center;">RENDIMIENTO </h3><h5 id="dropdown_statistics" style="text-align:center;">' + post_style_influencer_header_add;
 
 
                                     /*
@@ -2891,6 +2891,8 @@ if(!sbi_js_exists){
             var influencer_id =  jQuery('.influencer_select option:selected').data('id'),
                 influencer_name = jQuery('.influencer_select option:selected').data('tokens'),
                 influencer_list = [];
+            if(influencer_id == 0)
+                e.preventDefault();
             var appendItem = '<tr>'+
                 '<td>@'+influencer_name+'</td>'+
                 '<td><input class="influcner_sel_item" data-id="'+influencer_id+'" name="cost_'+influencer_id+'" type="text" value=""></td>'+
