@@ -1082,6 +1082,7 @@ function sb_instagram_manage_permission(){
             foreach($user_roles as $key => $row){
                 $excel_download =  0;
                 $label          =  0;
+                $avatar         =  0;
                 $filter_media   =  0;
                 $autoupdate     =  0;
                 $default_socialname =  '';
@@ -1090,6 +1091,7 @@ function sb_instagram_manage_permission(){
                 {
                     $excel_download =  $role_permssion_arr[$key]->excel_download;
                     $label          =  $role_permssion_arr[$key]->label;
+                    $avatar          =  $role_permssion_arr[$key]->avatar;
                     $filter_media   =  $role_permssion_arr[$key]->filter_media;
                     $autoupdate     =  $role_permssion_arr[$key]->autoupdate;
                     $default_socialname =  $role_permssion_arr[$key]->default_socialname;
@@ -1113,7 +1115,7 @@ function sb_instagram_manage_permission(){
                 $manage_pages_display_text = implode(',',$post_arr);
 
                 $functions  = '<div class="function_buttons"><ul>';
-                $functions .= '<li class="function_edit"><a data-id="'   . $key . '"  data-excel_download="'.$excel_download.'"  data-label="'.$label.'"  data-filter_media="'.$filter_media.'"  data-autoupdate="'.$autoupdate.'" data-default_socialname="'.$default_socialname.'" data-manage_pages="'.$manage_pages.'"><span>Edit</span></a></li>';
+                $functions .= '<li class="function_edit"><a data-id="'   . $key . '"  data-excel_download="'.$excel_download.'"  data-label="'.$label.'" data-avatar="'.$avatar.'"  data-filter_media="'.$filter_media.'"  data-autoupdate="'.$autoupdate.'" data-default_socialname="'.$default_socialname.'" data-manage_pages="'.$manage_pages.'"><span>Edit</span></a></li>';
                 $functions .= '</ul></div>';
 
                 $mysql_data[] = array(
@@ -1121,6 +1123,7 @@ function sb_instagram_manage_permission(){
                     "user_role"  => "<b style='color:#0073aa'>".$row['name'] . "</b>",
                     "excel_download"  => get_status_html($excel_download),
                     "label"    => get_status_html($label),
+                    "avatar"    => get_status_html($avatar),
                     "filter_media"     => get_status_html($filter_media),
                     "autoupdate"     => get_status_html($autoupdate),
                     "default_socialname"     => $default_socialname,
@@ -1133,6 +1136,7 @@ function sb_instagram_manage_permission(){
             $userrole_id = $id;
             $excel_download = isset($_REQUEST['excel_download']) ? $_REQUEST['excel_download'] : 0;
             $label = isset($_REQUEST['label']) ? $_REQUEST['label'] : 0;
+            $avatar = isset($_REQUEST['avatar']) ? $_REQUEST['avatar'] : 0;
             $filter_media = isset($_REQUEST['filter_media']) ? $_REQUEST['filter_media'] : 0;
             $autoupdate = isset($_REQUEST['autoupdate']) ? $_REQUEST['autoupdate'] : 0;
             $default_socialname = isset($_REQUEST['default_socialname']) ? $_REQUEST['default_socialname'] : '';
@@ -1147,9 +1151,9 @@ function sb_instagram_manage_permission(){
             $results = $wpdb->get_results( $query);
 
             if(count($results) == 0)
-                $query = "INSERT INTO wpsb_role_permissions (role_id, excel_download, label, filter_media, autoupdate, default_socialname, manage_pages) VALUES('$userrole_id', '$excel_download', '$label','$filter_media','$autoupdate','$default_socialname','$manage_pages')";
+                $query = "INSERT INTO wpsb_role_permissions (role_id, excel_download, label, avatar, filter_media, autoupdate, default_socialname, manage_pages) VALUES('$userrole_id', '$excel_download', '$label','$avatar','$filter_media','$autoupdate','$default_socialname','$manage_pages')";
             else
-                $query = "UPDATE wpsb_role_permissions SET excel_download = '$excel_download',label = '$label',filter_media = '$filter_media',autoupdate = '$autoupdate',default_socialname = '$default_socialname',manage_pages = '$manage_pages' WHERE role_id = '$userrole_id'";
+                $query = "UPDATE wpsb_role_permissions SET excel_download = '$excel_download',label = '$label',avatar = '$avatar',filter_media = '$filter_media',autoupdate = '$autoupdate',default_socialname = '$default_socialname',manage_pages = '$manage_pages' WHERE role_id = '$userrole_id'";
             if($wpdb->query( $query))
             {
                 $result  = 'success';
@@ -3400,6 +3404,7 @@ function sb_instagram_settings_page() {
                     <th>User Role</th>
                     <th>Excel Download</th>
                     <th>Labels</th>
+                    <th>Avatar</th>
                     <th>Filter Media</th>
                     <th>AutoUpdate</th>
                     <th>Default Social Name</th>
@@ -3426,9 +3431,15 @@ function sb_instagram_settings_page() {
                         </div>
                     </div>
                     <div class="input_container">
-                        <label for="label">Show Labels(Ayer/Hoy): </label>
+                        <label for="label">Show Label: </label>
                         <div class="field_container">
                             <input type="checkbox" class="text input-checkbox" name="label" id="label" value="1">
+                        </div>
+                    </div>
+                    <div class="input_container">
+                        <label for="label">Show Avatar: </label>
+                        <div class="field_container">
+                            <input type="checkbox" class="text input-checkbox" name="avatar" id="avatar" value="1">
                         </div>
                     </div>
                     <div class="input_container">

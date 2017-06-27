@@ -438,7 +438,9 @@ if(!sbi_js_exists){
                         media = feedOptions.media,
                         sbiShowAvatar = feedOptions.sbiShowAvatar,
                         sbiShowHighlight = feedOptions.sbiShowHighlight,
-                        sbiCustomAnalysis = feedOptions.sbiCustomAnalysis;
+                        sbiCustomAnalysis = feedOptions.sbiCustomAnalysis,
+                        sbiShowLabel = parseInt(feedOptions.sbiShowLabel),
+                        sbiFilterMedia = parseInt(feedOptions.sbiFilterMedia);
 
                     var CostArr = JSON.parse( var_this.getAttribute('data-cost-arr'));
 
@@ -1195,11 +1197,13 @@ if(!sbi_js_exists){
                             yesterday_date.setDate(yesterday_date.getDate() - 1);
 
                             var date_p = '';
-                            if(date.toDateString() === today_date.toDateString())
-                                date_p = '<p class="date_p hoy">H<span class="full_view">OY</span></p>';
-                            else if(date.toDateString() === yesterday_date.toDateString())
-                                date_p = '<p class="date_p">A<span class="full_view">YER</span></p>';
-                            
+                            if(sbiShowLabel)
+                            {
+                                if(date.toDateString() === today_date.toDateString())
+                                    date_p = '<p class="date_p hoy">H<span class="full_view">OY</span></p>';
+                                else if(date.toDateString() === yesterday_date.toDateString())
+                                    date_p = '<p class="date_p">A<span class="full_view">YER</span></p>';
+                            }
                             var data_int =  item.likes.count + item.comments.count;
                             //TEMPLATE:
                             imagesHTML += '<div class="sbi_item '+sbi_user_class+' sbi_type_'+item.type+' sbi_new '+sbiHoverEffect+'" id="sbi_'+item.id+'" data-likes="'+item.likes.count+'" data-comments="'+item.comments.count+'" data-ints="'+data_int+'" data-date="'+created_time_raw+'"'+carouselPadding+'><div class="sbi_photo_wrap'+keyword_contains+'">'+date_p+'<i class="fa fa-play sbi_playbtn"></i><div class="sbi_link" '+hovercolorstyles+'><div class="sbi_hover_top">'+sbiUsernameHTML+sbiCaptionHTML+'</div>'+sbiInstagramHTML+'<div class="sbi_hover_bottom" '+hovertextstyles+'><p>'+sbiDateHTML+locationName+'</p>'+sbiMetaHTML+'</div><a class="sbi_link_area" data-red="'+is_red+'" href="'+item.images.standard_resolution.url+'" data-lightbox-sbi="'+($i+1)+'" data-title="'+captionText+'" '+data_video+' data-id="sbi_'+item.id+'" data-user="'+item.user.username+'" data-url="'+item.link+'" data-avatar="'+item.user.profile_picture+'"><i class="fa fa-play sbi_playbtn" '+hovertextstyles+'></i><span class="sbi_lightbox_link" '+hovertextstyles+'>'+sbiIconHTML+'</span></a></div><a class="sbi_photo" href="'+item.link+'" target="_blank"><img src="'+data_image+'" alt="'+captionText+'" width="200" height="200" /></a></div><div class="sbi_info">'+mediaPofileHtml+'<div class="sbi_meta" style="color: #'+feedOptions.likescolor+'; '+sbiSettings.showlikes+'"><span class="sbi_likes" style="font-size: '+feedOptions.likessize+'px;"><i class="fa fa-heart" style="font-size: '+feedOptions.likessize+'px;"></i>'+commaSeparateNumber(item.likes.count)+'</span><span class="sbi_comments" style="font-size: '+feedOptions.likessize+'px;"><i class="fa fa-comment" style="font-size: '+feedOptions.likessize+'px;"></i>'+commaSeparateNumber(item.comments.count)+'</span>'+video_view_html+'</div><p class="sbi_caption_wrap" '+sbiSettings.showcaption+'><span class="sbi_caption" style="'+caption_color+' font-size: '+feedOptions.captionsize+'px;">'+keyword_contains_list+'</span><span class="sbi_expand"> <a href="#"><span class="sbi_more">...</span></a></span></p></div></div>';
@@ -1355,17 +1359,17 @@ if(!sbi_js_exists){
 
                             if(post_style == 'product' || post_style == 'product_influencer' ) {
 
-                                // jQuery.ajax({
-                                //     method: "POST",
-                                //     async: false,
-                                //     url: ajax_video_url,
-                                //     data: {media: sbi_item_str},
-                                //     success: function (response) {
-                                //         var response_json = JSON.parse(response);
-                                //         sbiAddViewCount(response_json);
-                                //         post_sytle_view_data = response_json.data;
-                                //     }
-                                // });
+                                jQuery.ajax({
+                                    method: "POST",
+                                    async: false,
+                                    url: ajax_video_url,
+                                    data: {media: sbi_item_str},
+                                    success: function (response) {
+                                        var response_json = JSON.parse(response);
+                                        sbiAddViewCount(response_json);
+                                        post_sytle_view_data = response_json.data;
+                                    }
+                                });
                             }
 
                             sbiAfterImagesLoaded();
@@ -1466,7 +1470,12 @@ if(!sbi_js_exists){
 
                                     var sorted=[];
                                     for(i=0;i<len;i++)
-                                        sorted.push([post_style_info[keys[i]]['username'],post_style_info[keys[i]]['ints']/post_style_info[keys[i]]['posts'],keys[i],post_style_info[keys[i]]['posts']*CostArr[keys[i]].cost]);
+                                    {
+                                        if(sbiCustomAnalysis)
+                                            sorted.push([post_style_info[keys[i]]['username'],post_style_info[keys[i]]['ints']/post_style_info[keys[i]]['posts'],keys[i],post_style_info[keys[i]]['posts']*CostArr[keys[i]].cost]);
+                                        else
+                                            sorted.push([post_style_info[keys[i]]['username'],post_style_info[keys[i]]['ints']/post_style_info[keys[i]]['posts'],keys[i]]);
+                                    }
                                     sorted.sort(function(a,b){return b[1] - a[1]});
 
                                     var dropdown_div = '<div class="dropdown" style="display:inline"><button class="btn btn-danger dropdown-toggle dropdown-title-span" type="button" data-toggle="dropdown">' + post_style_global['users'] + ' '+feedOptions.sbiKeywordType +'<i class="caret" style="margin-left:6px"></i></button><ul class="dropdown-menu"  style="list-style-type: none;"><li><a class="jquery-dropdown-item" href="#sb_instagram" data-user-name="" data-user-id="">'+post_style_global['users'] + ' '+feedOptions.sbiKeywordType +'</a></li>';
@@ -1491,22 +1500,17 @@ if(!sbi_js_exists){
                                         //Cost
                                         post_style_header_add += '</tr><tr><td>Cost/Int.</td>';
                                         for(i=0;i<len;i++){
-                                            var tmp_influencer_id = sorted[i][2];
-                                            //add usernames and posts of users
-
-                                            post_style_header_add += '<td>'+sorted[i][3]/sorted[i][1]+'</td>';
+                                            post_style_header_add += '<td>'+rFormatter(sorted[i][3]/sorted[i][1])+'</td>';
                                         }
                                         //Int Dollar
                                         post_style_header_add += '</tr><tr><td>Int./Dolar</td>';
                                         for(i=0;i<len;i++){
-                                            var tmp_influencer_id = sorted[i][2];
-                                            //add usernames and posts of users
-
-                                            post_style_header_add += '<td>'+sorted[i][1]/sorted[i][3]+'</td>';
+                                            post_style_header_add += '<td>'+Math.round(sorted[i][1]/sorted[i][3])+'</td>';
                                         }
                                         post_style_header_add += '</tr></tbody>';
                                         post_style_header_add += '</table>';
                                     }else{
+                                        post_style_header_add = '';
                                         for(i=0;i<len;i++){
                                             //add usernames and posts of users
                                             post_style_header_add += '<strong>' + sorted[i][0] + '</strong>: ' + kFormatter(sorted[i][1]) +  ' | ';
@@ -1519,7 +1523,7 @@ if(!sbi_js_exists){
                                     dropdown_div += '</ul></div>';
 
 
-                                    post_style_header += '<h3 style="text-align:center;font-size:26px;fone-weight:700">' +feedOptions.sbiHeaderTitle+' </h3><h3 style="text-align: center;" >'+dropdown_div+'<span id="dropdown_posts">' + post_style_global['posts'] + '</span> Posts<span id="dropdown_likes">' + commaSeparateNumber(post_style_global['ints']) + '</span> Int. '+ viewCoutnHtml +'</h3><div id="myChart_wrapper_div" style="width:100%;margin:auto;"><canvas id="myChart"></canvas></div><h3 style="text-align:center;font-weight:bold;">RENDIMIENTO (INT./POST)</h3><div id="dropdown_statistics" style="text-align:center;">' + post_style_header_add;
+                                    post_style_header += '<h3 style="text-align:center;font-size:26px;fone-weight:700">' +feedOptions.sbiHeaderTitle+' </h3><h3 style="text-align: center;" >'+dropdown_div+'<span id="dropdown_posts">' + post_style_global['posts'] + '</span> Posts<span id="dropdown_likes">' + commaSeparateNumber(post_style_global['ints']) + '</span> Int. '+ viewCoutnHtml +'</h3><div id="myChart_wrapper_div" style="width:100%;margin:auto;"><canvas id="myChart"></canvas></div><h3 style="text-align:center;font-weight:bold;">RENDIMIENTO (INT./POST)</h3><h5 id="dropdown_statistics" style="text-align:center;">' + post_style_header_add;
                                     
 /*  
                                     for (i = 0; i < len; i++) {
@@ -1529,10 +1533,12 @@ if(!sbi_js_exists){
                                     }
                                     */
                                     jQuery('.post_style_header').remove();
-                                    jQuery('#sb_instagram').prepend(post_style_header.slice(0, -3) + '</div></div>');
+                                    jQuery('#sb_instagram').prepend(post_style_header.slice(0, -3) + '</h5></div>');
                                     //LINK DROPDOWN ITEM TO HANDLER
                                     jQuery('#sb_instagram').find('.jquery-dropdown-item')
                                         .on('click', function() {
+                                            if(!sbiFilterMedia)
+                                                return false;
                                             //now modify the chart and photoes
                                             var dd_user_id = jQuery(this).attr('data-user-id');
                                             var dd_user_name = jQuery(this).attr('data-user-name');
@@ -1721,6 +1727,8 @@ if(!sbi_js_exists){
                                             }
                                         });
                                         document.getElementById("myChart").onclick = function(evt){
+                                            if(!sbiFilterMedia)
+                                                return false;
                                             var activePoints = myChart.getElementAtEvent(evt);
                                             // use _datasetIndex and _index from each element of the activePoints array
                                             if(activePoints.length) {
@@ -1830,7 +1838,8 @@ if(!sbi_js_exists){
                                     //LINK DROPDOWN ITEM TO HANDLER
                                     jQuery('#sb_instagram').find('.jquery-dropdown-item')
                                         .on('click', function() {
-
+                                            if(!sbiFilterMedia)
+                                                return false;
                                             //now modify the chart and photoes
                                             var dd_user_id = jQuery(this).attr('data-user-id');
                                             var dd_user_name = jQuery(this).attr('data-user-name');
@@ -1880,11 +1889,11 @@ if(!sbi_js_exists){
 
                                                 if(jQuery(this).hasClass('sbi_type_video'))
                                                     var sbi_type = "video";
-                                                
+                                                var item_view = post_sytle_view_data[sbi_id]['views'];
                                                 if(sbi_type ==  "video")
-                                                    reps += post_sytle_view_data[sbi_id]['views'];
+                                                    reps += item_view;
                                                 else
-                                                    views += post_sytle_view_data[sbi_id]['views'];
+                                                    views += item_view;
                                             });
                                             jQuery("#dropdown_reps").html(commaSeparateNumber(reps));
                                             jQuery("#dropdown_views").html(commaSeparateNumber(views));
@@ -2013,6 +2022,8 @@ if(!sbi_js_exists){
                                             }
                                         });
                                         document.getElementById("myChart").onclick = function(evt){
+                                            if(!sbiFilterMedia)
+                                                return false;
                                             var activePoints = myChart.getElementAtEvent(evt);
                                             // use _datasetIndex and _index from each element of the activePoints array
                                             if(activePoints.length) {
@@ -2481,7 +2492,13 @@ if(!sbi_js_exists){
                         if(num > 999) result += 'K';
                         return result;
                     }
-
+                    function rFormatter(num) {
+                        num = parseFloat(num);
+                        var result =  num.toFixed(3);
+                        if((result * 100) % 100 == 0)
+                            result = num.toFixed(2);
+                        return result
+                    }
                     function sbiBuildHeader(data, sbiSettings){
 
                         var feedOptions = sbiSettings.feedOptions,

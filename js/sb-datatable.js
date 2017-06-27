@@ -957,6 +957,7 @@ jQuery(document).ready(function($) {
                 { "data": "user_role" },
                 { "data": "excel_download" },
                 { "data": "label" },
+                { "data": "avatar" },
                 { "data": "filter_media" },
                 { "data": "autoupdate" },
                 { "data": "default_socialname" },
@@ -994,20 +995,21 @@ jQuery(document).ready(function($) {
             var id = $(this).data('id');
             var is_excel_download = $(this).data('excel_download'),
                 is_label = $(this).data('label'),
+                is_avatar = $(this).data('avatar'),
                 is_filter_media = $(this).data('filter_media'),
                 is_autoupdate = $(this).data('autoupdate'),
                 val_default_socialname = $(this).data('default_socialname'),
                 val_manage_pages = $(this).data('manage_pages').toString();
 
             form_permission.attr('data-id', id);
-            $('#excel_download', form_token).prop("checked", is_excel_download);
-            $('#label', form_token).prop("checked", is_label);
-            $('#filter_media', form_token).prop("checked", is_filter_media);
-            $('#autoupdate', form_token).prop("checked", is_autoupdate);
-            $('#default_socialname', form_token).val(val_default_socialname);
-            $('#role_id', form_token).html(id);
+            $('#excel_download', form_permission).prop("checked", is_excel_download);
+            $('#label', form_permission).prop("checked", is_label);
+            $('#avatar', form_permission).prop("checked", is_avatar);
+            $('#filter_media', form_permission).prop("checked", is_filter_media);
+            $('#autoupdate', form_permission).prop("checked", is_autoupdate);
+            $('#default_socialname', form_permission).val(val_default_socialname);
+            $('#role_id', form_permission).html(id);
 
-            console.log(val_manage_pages);
             if(val_manage_pages == '')
                 $tmp_arr = [];
             else
@@ -1025,7 +1027,6 @@ jQuery(document).ready(function($) {
             $('.field_container label.error', form_permission).hide();
             $('.field_container', form_permission).removeClass('valid').removeClass('error');
 
-            $('#is_excel_download', form_permission).val(is_excel_download);
 
             hide_loading_message();
             show_lightbox();

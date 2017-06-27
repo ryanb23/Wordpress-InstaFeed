@@ -1948,3 +1948,36 @@ width: 210px !important;
   text-transform: uppercase;
 } 
 
+#dropdown_statistics table{
+  margin:auto;
+}
+#dropdown_statistics table tr,
+#dropdown_statistics table th,
+#dropdown_statistics table td{
+  padding:6px 20px;
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+#dropdown_statistics table tr th{
+  background-color: #d9534f;
+  color: #fff;
+  font-size: 19px;
+}
+#dropdown_statistics table tr th:first-of-type{
+  background-color:#000;
+}
+
+#dropdown_statistics table td{
+  font-size: 19px;
+  background-color:#ccc;
+  color:#000;
+}
+#dropdown_statistics table tr td:first-of-type{
+  background-color:#888;
+  color:#fff; 
+}
+
+
+
+

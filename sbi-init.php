@@ -182,9 +182,14 @@ function get_recent_media($uid_arr, $atts, $options)
     return extractKeyWords($text_result_arr);
 }
 
-function get_available_post_ids($user_roles){
+function get_user_permission($user_roles){
     global $wpdb;
     $tmp_arr = [];
+    $tmp_arr1 = [];
+    $is_excel = 0;
+    $is_label = 0;
+    $is_avatar = 0;
+    $is_filter_media = 0;
     foreach($user_roles as $user_role_item)
     {
         $query = "SELECT * FROM wpsb_role_permissions WHERE role_id = '$user_role_item'";
@@ -192,19 +197,38 @@ function get_available_post_ids($user_roles){
         foreach($result as $result_item)
         {
             $tmp_arr[] = $result_item->manage_pages;
+            $tmp_arr1[] = $result_item->default_socialname;
+            if($result_item->excel_download)
+                $is_excel = $result_item->excel_download;
+            if($result_item->label)
+                $is_label = $result_item->label;
+            if($result_item->avatar)
+                $is_avatar = $result_item->avatar;
+            if($result_item->filter_media)
+                $is_filter_media = $result_item->filter_media;
         }
     }
     $available_post_ids = explode(',',implode(',', $tmp_arr));
-    return $available_post_ids;
+    $available_user_name = explode(',',implode(',', $tmp_arr1));
+
+    return array(
+        'id' => $available_post_ids,
+        'name' => $available_user_name,
+        'is_excel' => $is_excel ? true:false,
+        'is_avatar' => $is_avatar ? true:false,
+        'is_label' => $is_label ? true:false,
+        'is_filter_media' => $is_filter_media ? true:false
+        );
 }
+
 function display_sb_instagram_feed($atts, $content = null) {
     global $wpdb; 
     global $category_arr;
     $current_user = wp_get_current_user();
     $user_roles = $current_user->roles;
-
     /******************* SHORTCODE OPTIONS ********************/
     $page_id = get_the_ID();
+    $user_permission_arr = get_user_permission($user_roles);
 
     $options = get_option('sb_instagram_settings');
     $search_post_param = array();
@@ -242,8 +266,11 @@ function display_sb_instagram_feed($atts, $content = null) {
         $delete_query = "DELETE FROM wpsb_role_influencers WHERE role_id IN ('".implode(',',$user_roles)."') AND post_id = ".$page_id." AND influencer NOT IN ('".$influencer_list."')";
         // echo ($delete_query);die;
         $wpdb->query($delete_query);
-        $query = 'INSERT INTO wpsb_role_influencers (role_id,post_id, influencer, cost) VALUES '.implode(',', $tmp_arr). ' ON DUPLICATE KEY UPDATE post_id=VALUES(post_id), influencer=VALUES(influencer), cost=VALUES(cost);';
-        $wpdb->query($query);
+        if(count($tmp_arr))
+        {
+            $query = 'INSERT INTO wpsb_role_influencers (role_id,post_id, influencer, cost) VALUES '.implode(',', $tmp_arr). ' ON DUPLICATE KEY UPDATE post_id=VALUES(post_id), influencer=VALUES(influencer), cost=VALUES(cost);';
+            $wpdb->query($query);
+        }
     }
     //Check Access_token Expire
     // $url = 'https://api.instagram.com/v1/users/self/?access_token=' . $options['sb_instagram_at'];
@@ -390,6 +417,12 @@ function display_sb_instagram_feed($atts, $content = null) {
     $strMediaDays = $atts['days'];
     $showAvatar = ($atts['showavatar'] === 'true' || $atts['showavatar'] === true) ? true: false;
     $showexcel = ($atts['showexcel'] === 'true' || $atts['showexcel'] === true) ? true: false;
+    $showexcel = isset($user_permission_arr['is_excel']) ? $user_permission_arr['is_excel'] : $showexcel;
+
+    $sbiShowLabel = isset($user_permission_arr['is_label']) ? $user_permission_arr['is_label'] : 0;
+    $showAvatar = isset($user_permission_arr['is_avatar'])  ? $user_permission_arr['is_avatar'] : 0;
+    $sbiFilterMedia = isset($user_permission_arr['is_filter_media']) ? $user_permission_arr['is_filter_media'] : 0;
+
     $showhighlight = ($atts['showhighlight'] === 'true' || $atts['showhighlight'] === true) ? true: false;
     $mediaDays = null;
 
@@ -505,7 +538,8 @@ function display_sb_instagram_feed($atts, $content = null) {
         if(isset($search_post_param['category_select']))
         {
             if($search_post_param['category_select'] != 'all')
-                $where_cond = "AND tags REGEXP '[[:<:]]".$search_post_param['category_select']."[[:>:]]' AND tags REGEXP '[[:<:]]panama[[:>:]]'";
+                $where_cond = "AND tags REGEXP '[[:<:]]".$search_post_param['category_select']."[[:>:]]'";
+            $where_cond = "AND tags REGEXP '[[:<:]]panama[[:>:]]'";
         }
     }
 
@@ -908,10 +942,7 @@ function display_sb_instagram_feed($atts, $content = null) {
         $custom_cost_arr = [];
         if($sb_instagram_post_style == 'product')
         {
-           
-            $available_post_ids = get_available_post_ids($user_roles);
-
-            if(in_array($page_id,$available_post_ids))
+            if(in_array($page_id,$user_permission_arr['id']) OR in_array($current_user->user_login,$user_permission_arr['name']))
             {
                 $query = "SELECT * from wpsb_tags";
                 $all_influencers = $wpdb->get_results($query);
@@ -934,7 +965,7 @@ function display_sb_instagram_feed($atts, $content = null) {
                     '<select class="influencer_select" data-style="btn-danger" data-live-search="true">';
                 foreach($all_influencers as $item)
                 {     
-                    $sb_instagram_content .='<option data-id="'.$item->userid.'" data-tokens="'.$item->username.'">@'.$item->username.'</option>';
+                    $sb_instagram_content .='<option data-id="'.$item->userid.'" data-tokens="'.$item->username.'">'.$item->username.'</option>';
                 }
                 $sb_instagram_content .= '</select>'.
                     '<table>'.
@@ -987,7 +1018,7 @@ function display_sb_instagram_feed($atts, $content = null) {
         if ( !empty($sb_instagram_height) ) $sb_instagram_content .= ' sbi_fixed_height ';
         $sb_instagram_content .= ' sbi_col_' . trim($sb_instagram_cols_class);
         if ( $sb_instagram_width_resp ) $sb_instagram_content .= ' sbi_width_resp';
-        $sb_instagram_content .= '" '.$sb_instagram_styles .' data-post-style="' . $sb_instagram_post_style . '" data-id="' . $sb_instagram_user_id . '" data-num="' . trim($atts['num']) . '" data-res="' . trim($atts['imageres']) . '" data-cols="' . trim($sb_instagram_cols) . '" data-cost-arr =\''.trim($custom_cost_arr).'\' data-options=\'{&quot;showcaption&quot;: &quot;'.$sb_instagram_show_caption.'&quot;, &quot;captionlength&quot;: &quot;'.$sb_instagram_caption_length.'&quot;, &quot;captioncolor&quot;: &quot;'.$sb_instagram_caption_color.'&quot;, &quot;captionsize&quot;: &quot;'.$sb_instagram_caption_size.'&quot;, &quot;showlikes&quot;: &quot;'.$sb_instagram_show_meta.'&quot;, &quot;likescolor&quot;: &quot;'.$sb_instagram_meta_color.'&quot;, &quot;likessize&quot;: &quot;'.$sb_instagram_meta_size.'&quot;, &quot;sortby&quot;: &quot;'.$atts['sortby'].'&quot;, &quot;hashtag&quot;: &quot;'.$sb_instagram_hashtag.'&quot;, &quot;type&quot;: &quot;'.$sb_instagram_type.'&quot;, &quot;hovercolor&quot;: &quot;'.sbi_hextorgb($sb_hover_background).'&quot;, &quot;hovertextcolor&quot;: &quot;'.sbi_hextorgb($sb_hover_text).'&quot;, &quot;hoverdisplay&quot;: &quot;'.$atts['hoverdisplay'].'&quot;, &quot;hovereffect&quot;: &quot;'.$atts['hovereffect'].'&quot;, &quot;headercolor&quot;: &quot;'.$sb_instagram_header_color.'&quot;, &quot;headerprimarycolor&quot;: &quot;'.$sb_instagram_header_primary_color.'&quot;, &quot;headersecondarycolor&quot;: &quot;'.$sb_instagram_header_secondary_color.'&quot;, &quot;disablelightbox&quot;: &quot;'.$sb_instagram_disable_lightbox.'&quot;, &quot;disablecache&quot;: &quot;'.$sb_instagram_disable_cache.'&quot;, &quot;location&quot;: &quot;'.$sb_instagram_location.'&quot;, &quot;coordinates&quot;: &quot;'.$sb_instagram_coordinates.'&quot;, &quot;single&quot;: &quot;'.$sb_instagram_single.'&quot;, &quot;maxrequests&quot;: &quot;'.$sb_instagram_requests_max.'&quot;, &quot;headerstyle&quot;: &quot;'.$sb_instagram_header_style.'&quot;, &quot;showfollowers&quot;: &quot;'.$sb_instagram_show_followers.'&quot;, &quot;showbio&quot;: &quot;'.$sb_instagram_show_bio.'&quot;, &quot;carousel&quot;: &quot;['.$sbi_carousel.', '.$sb_instagram_carousel_arrows.', '.$sb_instagram_carousel_pag.', '.$sb_instagram_carousel_autoplay.', '.$sb_instagram_carousel_interval.']&quot;, &quot;imagepadding&quot;: &quot;'.$sb_instagram_image_padding.'&quot;, &quot;imagepaddingunit&quot;: &quot;'.$sb_instagram_image_padding_unit.'&quot;, &quot;media&quot;: &quot;'.$sb_instagram_media_type.'&quot;, &quot;includewords&quot;: &quot;'.$sb_instagram_include_words.'&quot;, &quot;post_style&quot;: &quot;'.$sb_instagram_post_style.'&quot;, &quot;excludewords&quot;: &quot;'.$sb_instagram_exclude_words.'&quot;, &quot;sbiCacheExists&quot;: &quot;'.$sbi_cache_exists.'&quot;, &quot;sbiHeaderCache&quot;: &quot;'.$sbiHeaderCache.'&quot;, &quot;sbiHeaderTitle&quot;: &quot;'.$page_title.'&quot;, &quot;sbiKeywordType&quot;: &quot;'.$keywordType.'&quot;, &quot;sbiPageType&quot;: &quot;'.$pageType.'&quot;, &quot;sbiMediaDays&quot;: &quot;'.$mediaDays.'&quot;, &quot;sbiShowAvatar&quot;: &quot;'.$showAvatar.'&quot;,&quot;sbiShowHighlight&quot;: &quot;'.$showhighlight.'&quot;,&quot;sbiCustomAnalysis&quot;: &quot;'.$custom_analysis.'&quot;}\'>';
+        $sb_instagram_content .= '" '.$sb_instagram_styles .' data-post-style="' . $sb_instagram_post_style . '" data-id="' . $sb_instagram_user_id . '" data-num="' . trim($atts['num']) . '" data-res="' . trim($atts['imageres']) . '" data-cols="' . trim($sb_instagram_cols) . '" data-cost-arr =\''.trim($custom_cost_arr).'\' data-options=\'{&quot;showcaption&quot;: &quot;'.$sb_instagram_show_caption.'&quot;, &quot;captionlength&quot;: &quot;'.$sb_instagram_caption_length.'&quot;, &quot;captioncolor&quot;: &quot;'.$sb_instagram_caption_color.'&quot;, &quot;captionsize&quot;: &quot;'.$sb_instagram_caption_size.'&quot;, &quot;showlikes&quot;: &quot;'.$sb_instagram_show_meta.'&quot;, &quot;likescolor&quot;: &quot;'.$sb_instagram_meta_color.'&quot;, &quot;likessize&quot;: &quot;'.$sb_instagram_meta_size.'&quot;, &quot;sortby&quot;: &quot;'.$atts['sortby'].'&quot;, &quot;hashtag&quot;: &quot;'.$sb_instagram_hashtag.'&quot;, &quot;type&quot;: &quot;'.$sb_instagram_type.'&quot;, &quot;hovercolor&quot;: &quot;'.sbi_hextorgb($sb_hover_background).'&quot;, &quot;hovertextcolor&quot;: &quot;'.sbi_hextorgb($sb_hover_text).'&quot;, &quot;hoverdisplay&quot;: &quot;'.$atts['hoverdisplay'].'&quot;, &quot;hovereffect&quot;: &quot;'.$atts['hovereffect'].'&quot;, &quot;headercolor&quot;: &quot;'.$sb_instagram_header_color.'&quot;, &quot;headerprimarycolor&quot;: &quot;'.$sb_instagram_header_primary_color.'&quot;, &quot;headersecondarycolor&quot;: &quot;'.$sb_instagram_header_secondary_color.'&quot;, &quot;disablelightbox&quot;: &quot;'.$sb_instagram_disable_lightbox.'&quot;, &quot;disablecache&quot;: &quot;'.$sb_instagram_disable_cache.'&quot;, &quot;location&quot;: &quot;'.$sb_instagram_location.'&quot;, &quot;coordinates&quot;: &quot;'.$sb_instagram_coordinates.'&quot;, &quot;single&quot;: &quot;'.$sb_instagram_single.'&quot;, &quot;maxrequests&quot;: &quot;'.$sb_instagram_requests_max.'&quot;, &quot;headerstyle&quot;: &quot;'.$sb_instagram_header_style.'&quot;, &quot;showfollowers&quot;: &quot;'.$sb_instagram_show_followers.'&quot;, &quot;showbio&quot;: &quot;'.$sb_instagram_show_bio.'&quot;, &quot;carousel&quot;: &quot;['.$sbi_carousel.', '.$sb_instagram_carousel_arrows.', '.$sb_instagram_carousel_pag.', '.$sb_instagram_carousel_autoplay.', '.$sb_instagram_carousel_interval.']&quot;, &quot;imagepadding&quot;: &quot;'.$sb_instagram_image_padding.'&quot;, &quot;imagepaddingunit&quot;: &quot;'.$sb_instagram_image_padding_unit.'&quot;, &quot;media&quot;: &quot;'.$sb_instagram_media_type.'&quot;, &quot;includewords&quot;: &quot;'.$sb_instagram_include_words.'&quot;, &quot;post_style&quot;: &quot;'.$sb_instagram_post_style.'&quot;, &quot;excludewords&quot;: &quot;'.$sb_instagram_exclude_words.'&quot;, &quot;sbiCacheExists&quot;: &quot;'.$sbi_cache_exists.'&quot;, &quot;sbiHeaderCache&quot;: &quot;'.$sbiHeaderCache.'&quot;, &quot;sbiHeaderTitle&quot;: &quot;'.$page_title.'&quot;, &quot;sbiKeywordType&quot;: &quot;'.$keywordType.'&quot;, &quot;sbiPageType&quot;: &quot;'.$pageType.'&quot;, &quot;sbiMediaDays&quot;: &quot;'.$mediaDays.'&quot;, &quot;sbiShowAvatar&quot;: &quot;'.$showAvatar.'&quot;,&quot;sbiShowHighlight&quot;: &quot;'.$showhighlight.'&quot;,&quot;sbiCustomAnalysis&quot;: &quot;'.$custom_analysis.'&quot;,&quot;sbiShowLabel&quot;: &quot;'.$sbiShowLabel.'&quot;,&quot;sbiFilterMedia&quot;: &quot;'.$sbiFilterMedia.'&quot;}\'>';
 
         //Header
         if( $sb_instagram_show_header ){
@@ -1666,8 +1697,8 @@ function sb_instagram_styles_enqueue() {
     wp_enqueue_style( 'sb_instagram_ui_styles' );
     wp_register_style( 'sb_instagram_bootstrap_styles', plugins_url('assets/bootstrap/css/bootstrap.css', __FILE__), array(), SBIVER );
     wp_enqueue_style( 'sb_instagram_bootstrap_styles' );
-    wp_register_style( 'sb_instagram_select2_styles', plugins_url('assets/select2/css/select2.css', __FILE__), array(), SBIVER );
-    wp_enqueue_style( 'sb_instagram_select2_styles' );
+    // wp_register_style( 'sb_instagram_select2_styles', plugins_url('assets/select2/css/select2.css', __FILE__), array(), SBIVER );
+    // wp_enqueue_style( 'sb_instagram_select2_styles' );
 
     wp_register_style( 'sb_instagram_bsselect_styles', plugins_url('assets/bootstrap-select/bootstrap-select.css', __FILE__), array(), SBIVER );
     wp_enqueue_style( 'sb_instagram_bsselect_styles' );
@@ -1690,7 +1721,7 @@ function sb_instagram_scripts_enqueue() {
     wp_register_script( 'sb_instagram_scripts_ui', plugins_url( '/js/jquery-ui.js' , __FILE__ ), array('jquery'), SBIVER, true );
     wp_register_script( 'sb_instagram_scripts_bs', plugins_url( 'assets/bootstrap/js/bootstrap.min.js' , __FILE__ ), array('jquery'), SBIVER, true );
     wp_register_script( 'sb_instagram_scripts_bs_select', plugins_url( 'assets/bootstrap-select/bootstrap-select.js' , __FILE__ ), array('jquery'), SBIVER, true );
-    wp_register_script( 'sb_instagram_scripts_select2', plugins_url( 'assets/select2/js/select2.js' , __FILE__ ), array('jquery'), SBIVER, true );
+    // wp_register_script( 'sb_instagram_scripts_select2', plugins_url( 'assets/select2/js/select2.js' , __FILE__ ), array('jquery'), SBIVER, true );
 
     if($page_id == 3046)
     {
@@ -1726,7 +1757,7 @@ function sb_instagram_scripts_enqueue() {
         wp_enqueue_script('sb_instagram_scripts_dropdown');
         wp_enqueue_script('sb_instagram_scripts_ui');
         wp_enqueue_script('sb_instagram_scripts_bs');
-        wp_enqueue_script('sb_instagram_scripts_select2');
+        // wp_enqueue_script('sb_instagram_scripts_select2');
         wp_enqueue_script('sb_instagram_scripts_bs_select');
         if($page_id == 3046)
         {
