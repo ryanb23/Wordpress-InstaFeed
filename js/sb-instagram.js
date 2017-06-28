@@ -1479,7 +1479,7 @@ if(!sbi_js_exists){
                                     sorted.sort(function(a,b){return b[1] - a[1]});
 
                                     var dropdown_div = '<div class="dropdown" style="display:inline"><button class="btn btn-danger dropdown-toggle dropdown-title-span" type="button" data-toggle="dropdown">' + post_style_global['users'] + ' '+feedOptions.sbiKeywordType +'<i class="caret" style="margin-left:6px"></i></button><ul class="dropdown-menu"  style="list-style-type: none;"><li><a class="jquery-dropdown-item" href="#sb_instagram" data-user-name="" data-user-id="">'+post_style_global['users'] + ' '+feedOptions.sbiKeywordType +'</a></li>';
-                                    
+                                    console.log(sorted);
                                     if(sbiCustomAnalysis)
                                     {
                                         post_style_header_add = '<table><thead><tr><th>Indicador</th>';
@@ -1500,12 +1500,16 @@ if(!sbi_js_exists){
                                         //Cost
                                         post_style_header_add += '</tr><tr><td>Cost/Int.</td>';
                                         for(i=0;i<len;i++){
-                                            post_style_header_add += '<td>'+rFormatter(sorted[i][3]/sorted[i][1])+'</td>';
+                                            var total_int = post_style_info[sorted[i][2]]['ints'];
+                                            var cost_int = total_int != 0 ? rFormatter(sorted[i][3]/total_int) : 0;
+                                            post_style_header_add += '<td>'+cost_int+'</td>';
                                         }
                                         //Int Dollar
                                         post_style_header_add += '</tr><tr><td>Int./Dolar</td>';
                                         for(i=0;i<len;i++){
-                                            post_style_header_add += '<td>'+Math.round(sorted[i][1]/sorted[i][3])+'</td>';
+                                            var total_int = post_style_info[sorted[i][2]]['ints'];
+                                            var int_dolar = sorted[i][3] != 0 ? Math.round(total_int/sorted[i][3]) : 0;
+                                            post_style_header_add += '<td>'+int_dolar+'</td>';
                                         }
                                         post_style_header_add += '</tr></tbody>';
                                         post_style_header_add += '</table>';

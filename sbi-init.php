@@ -944,7 +944,7 @@ function display_sb_instagram_feed($atts, $content = null) {
         {
             if(in_array($page_id,$user_permission_arr['id']) OR in_array($current_user->user_login,$user_permission_arr['name']))
             {
-                $query = "SELECT * from wpsb_tags";
+                $query = "SELECT * from wpsb_tags WHERE tags NOT REGEXP '[[:<:]]brands[[:>:]]'"; 
                 $all_influencers = $wpdb->get_results($query);
 
                 $query = "SELECT a.*,b.username, b.tags FROM (SELECT * FROM wpsb_role_influencers ORDER BY cost desc) as a LEFT JOIN wpsb_tags as b ON a.influencer = b.userid WHERE a.role_id REGEXP '[[:<:]]".implode(',',$user_roles)."[[:>:]]' AND a.post_id = '$page_id' GROUP BY a.post_id,a.influencer";
