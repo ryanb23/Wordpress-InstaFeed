@@ -417,14 +417,21 @@ function display_sb_instagram_feed($atts, $content = null) {
     $strMediaDays = $atts['days'];
     $showAvatar = ($atts['showavatar'] === 'true' || $atts['showavatar'] === true) ? true: false;
     $showexcel = ($atts['showexcel'] === 'true' || $atts['showexcel'] === true) ? true: false;
-    $showexcel = isset($user_permission_arr['is_excel']) ? $user_permission_arr['is_excel'] : $showexcel;
-
-    $sbiShowLabel = isset($user_permission_arr['is_label']) ? $user_permission_arr['is_label'] : 0;
-    $showAvatar = isset($user_permission_arr['is_avatar'])  ? $user_permission_arr['is_avatar'] : 0;
-    $sbiFilterMedia = isset($user_permission_arr['is_filter_media']) ? $user_permission_arr['is_filter_media'] : 0;
-
     $showhighlight = ($atts['showhighlight'] === 'true' || $atts['showhighlight'] === true) ? true: false;
     $mediaDays = null;
+    $sb_instagram_post_style = $atts['post_style'];
+
+    $showexcel = 0;
+    $sbiShowLabel = 1;
+    $showAvatar = 1;
+    $sbiFilterMedia = 0;
+    if($sb_instagram_post_style != '')
+    {
+        $showexcel = isset($user_permission_arr['is_excel']) ? $user_permission_arr['is_excel'] : $showexcel;
+        $sbiShowLabel = isset($user_permission_arr['is_label']) ? $user_permission_arr['is_label'] : 0;
+        $showAvatar = isset($user_permission_arr['is_avatar'])  ? $user_permission_arr['is_avatar'] : 0;
+        $sbiFilterMedia = isset($user_permission_arr['is_filter_media']) ? $user_permission_arr['is_filter_media'] : 0;
+    }
 
     $sb_page_limit = unserialize($options['sb_instagram_pagelimit']);
     $influencer_view_limit = null;
@@ -489,7 +496,6 @@ function display_sb_instagram_feed($atts, $content = null) {
         $search_view_limit      = ($search_view_limit == null) ? $atts['limit'] : $search_view_limit;
     }
 
-    $sb_instagram_post_style = $atts['post_style'];
     switch ($sb_instagram_post_style)
     {
         case "product_influencer":
@@ -941,7 +947,12 @@ function display_sb_instagram_feed($atts, $content = null) {
         $custom_analysis = false;
         $custom_cost_arr = [];
         if($sb_instagram_post_style == 'product')
-        {
+        {   
+            $tmp_perm_link = get_permalink($page_id);
+            $tmp_perm_link_arr = explode('/',$tmp_perm_link);
+            $brand_page_name = $tmp_perm_link_arr[count($tmp_perm_link_arr)-2];
+            $user_permission_arr['name'][] = $brand_page_name;
+            
             if(in_array($page_id,$user_permission_arr['id']) OR in_array($current_user->user_login,$user_permission_arr['name']))
             {
                 $query = "SELECT * from wpsb_tags WHERE tags NOT REGEXP '[[:<:]]brands[[:>:]]'"; 
