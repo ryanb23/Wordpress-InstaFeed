@@ -946,13 +946,16 @@ function display_sb_instagram_feed($atts, $content = null) {
     {
         $custom_analysis = false;
         $custom_cost_arr = [];
+    
         if($sb_instagram_post_style == 'product')
         {   
             $tmp_perm_link = get_permalink($page_id);
             $tmp_perm_link_arr = explode('/',$tmp_perm_link);
-            $brand_page_name = $tmp_perm_link_arr[count($tmp_perm_link_arr)-2];
-            $user_permission_arr['name'][] = $brand_page_name;
-            
+            if(isset($tmp_perm_link_arr[count($tmp_perm_link_arr)-2]))
+            {
+                $brand_page_name = $tmp_perm_link_arr[count($tmp_perm_link_arr)-2];
+                $user_permission_arr['name'][] = $brand_page_name;
+            }
             if(in_array($page_id,$user_permission_arr['id']) OR in_array($current_user->user_login,$user_permission_arr['name']))
             {
                 $query = "SELECT * from wpsb_tags WHERE tags NOT REGEXP '[[:<:]]brands[[:>:]]'"; 

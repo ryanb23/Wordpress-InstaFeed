@@ -412,7 +412,7 @@ function sb_instagram_manage_keywords()
                         if ($tmp_post_id == 0) {
                             $page_title = strtoupper(trim($row));
                             $page_permalink = $keyword_origin;
-                            $page_content = '[instagram-feed tag="top" showheader=false showcaption=true showbutton=false num=20 includewords="' . $keyword_name . '" post_style = "product"]';
+                            $page_content = '[instagram-feed tag="'.$keyword_origin.'" showheader=false showcaption=true showbutton=false num=20 includewords="' . $keyword_name . '" post_style = "product"]';
                             $new_post = array(
                                 'post_title' => wp_strip_all_tags($page_title),
                                 'post_content' => $page_content,
