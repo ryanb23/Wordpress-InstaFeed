@@ -222,6 +222,7 @@ function get_user_permission($user_roles){
 }
 
 function display_sb_instagram_feed($atts, $content = null) {
+
     global $wpdb; 
     global $category_arr;
     $current_user = wp_get_current_user();
@@ -229,6 +230,11 @@ function display_sb_instagram_feed($atts, $content = null) {
     /******************* SHORTCODE OPTIONS ********************/
     $page_id = get_the_ID();
     $user_permission_arr = get_user_permission($user_roles);
+
+    if(isset($_REQUEST['app_name']) && $_REQUEST['app_name'] == 'instagram')
+    {
+        return; 
+    }
 
     $options = get_option('sb_instagram_settings');
     $search_post_param = array();
@@ -1696,6 +1702,161 @@ function export_file()
     $filename = $_GET['filename'].".xls";
     $result_arr = get_transient('export_'+$index);
     download_excel_file($filename ,$result_arr);
+    die();
+}
+
+add_action('wp_ajax_social_login_create','sb_instagram_social_login_create');
+function sb_instagram_social_login_create(){
+    global $wpdb;
+    $type = isset($_REQUEST['type'])? $_REQUEST['type'] : '';
+    $country = isset($_REQUEST['country'])? $_REQUEST['country'] : '';  
+    $username = isset($_REQUEST['username'])? $_REQUEST['username'] : '';  
+    $user_full_name = '';
+    $userid = null;
+    $sb_instagram_settings = get_option('sb_instagram_settings');
+
+    if($username != '') {
+        $sbi_page_url = 'https://api.instagram.com/v1/users/search?q=' . $username . '&access_token=' . $sb_instagram_settings['sb_instagram_at'];
+        $tmp = json_decode(file_get_contents($sbi_page_url));
+        if (sizeof($tmp->data)) {
+            $userid = $tmp->data[0]->id;
+            $user_full_name = $tmp->data[0]->full_name;
+        }
+    }
+    $keyword_name = strtolower(trim($username));
+    $keyword_name = preg_replace('/[^\sa-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑ@#_.]+/u', '', $keyword_name);
+    $keyword_name = '@'.$keyword_name;
+
+    $query = "SELECT * FROM wpsb_tags WHERE userid = '" . $wpdb->_real_escape( $userid) . "'";
+    $exist_influencer = $wpdb->get_results( $query);
+    $exist_influencer_page = get_page_by_path($username,OBJECT,'page');
+    $exist_influencer_contenido_page = get_page_by_path($username.'-contenido',OBJECT,'page');
+
+    $sb_keywords_list = explode("\r\n",$sb_instagram_settings['sb_instagram_custom_keywords']);
+    $exist_brand = in_array($keyword_name, $sb_keywords_list);
+    $exist_brand_page = get_page_by_path($username,OBJECT,'post');
+    if($type == 'brand')
+    {
+        if($exist_brand_page)
+        {
+            $post_id = $exist_brand_page->ID;
+        }
+        else{
+            $page_title = strtoupper($keyword_name);
+            $page_permalink = $keyword_name;
+            $page_content = '[instagram-feed tag="top" showheader=false showcaption=true showbutton=false num=20 includewords="' . $keyword_name . '" post_style = "product"]';
+            $new_post = array(
+                'post_title' => wp_strip_all_tags($page_title),
+                'post_content' => $page_content,
+                'post_name' => $page_permalink,
+                'post_status' => 'publish'
+            );
+
+            // Insert the post into the database
+            $post_id = wp_insert_post($new_post);
+        }
+        if(!$exist_brand)
+        {
+            $sb_instagram_settings['sb_instagram_custom_keywords'] .= "\r\n" . $keyword_name;
+            $sb_instagram_brand_country_list = unserialize($sb_instagram_settings['sb_instagram_brand_country']);
+            $sb_instagram_brand_country_list[$keyword_name] = $country;
+            $sb_instagram_settings['sb_instagram_brand_country'] = serialize($sb_instagram_brand_country_list);
+            
+            $sb_instagram_custom_post_ids = unserialize($sb_instagram_settings['sb_instagram_custom_post_ids']);
+            $sb_instagram_custom_post_ids[$keyword_name] = $post_id;
+            $sb_instagram_settings['sb_instagram_custom_post_ids'] = serialize($sb_instagram_custom_post_ids);
+        }else{
+            
+        }
+
+        if($exist_influencer_contenido_page)
+        {
+            $page_id = $exist_influencer_contenido_page->ID;
+        }
+        else{
+            $page_title = strtoupper($keyword_name . ' contenido');
+            $page_permalink = $keyword_name.'-contenido';
+            $page_content = '[instagram-feed id="'.$userid.'" showheader=false showcaption=true showbutton=false days=7d post_style = "product_influencer" brands="," title="GRÁFICA COMPARATIVA DE INTERACCIONES POR DÍA" keywordtype="Contenidos"]';
+
+            $new_page = array(
+                'post_title' => wp_strip_all_tags($page_title),
+                'post_content' => $page_content,
+                'post_name' => $page_permalink,
+                'post_status' => 'publish',
+                'post_type' => 'page'
+            );
+
+            // Insert the post into the database
+            $page_id = wp_insert_post($new_page);
+        }
+
+        if(!$exist_influencer)
+        {
+            $query = "INSERT INTO wpsb_tags SET ";
+            if (!is_null($userid)) {
+                $query .= "userid = '" . $wpdb->_real_escape($userid) . "', ";
+            }
+            if ($username != '') {
+                $query .= "username   = '" . $wpdb->_real_escape($username) . "', ";
+            }
+            if ($country != '') {
+                $query .= "tags = 'brands," . $country . "',";
+            }
+            if($page_id != 0)
+                $query .= "post_id = '" . $wpdb->_real_escape($page_id) . "',";
+
+            $query = substr($query,0,-1);
+            if (!is_null($userid))
+                $results = $wpdb->query($query);
+        }else{
+            
+        }
+
+    }else{
+        $gender = $type;
+        if($exist_influencer_page)
+        {
+            $page_id = $exist_influencer_page->ID;
+        }
+        else{
+            $page_title = strtoupper($keyword_name . ' - ' . $user_full_name . ' - influencer ' . $country);
+            $page_permalink = $keyword_name;
+            $page_content = '[instagram-feed id="'.$userid.'" showheader=false showcaption=true showbutton=false num=20 post_style = "product_influencer" showavatar=true showexcel=true]';
+
+            $new_page = array(
+                'post_title' => wp_strip_all_tags($page_title),
+                'post_content' => $page_content,
+                'post_name' => $page_permalink,
+                'post_status' => 'publish',
+                'post_type' => 'page'
+            );
+
+            // Insert the post into the database
+            $page_id = wp_insert_post($new_page);
+        }
+
+        if(!$exist_influencer)
+        {
+            $query = "INSERT INTO wpsb_tags SET ";
+            if (!is_null($userid)) {
+                $query .= "userid = '" . $wpdb->_real_escape($userid) . "', ";
+            }
+            if ($username != '') {
+                $query .= "username   = '" . $wpdb->_real_escape($username) . "', ";
+            }
+            if ($country != '') {
+                $query .= "tags = 'influencer, " . $gender . ", " . $country . "',";
+            }
+            if($page_id != 0)
+                $query .= "post_id = '" . $wpdb->_real_escape($page_id) . "',";
+
+            $query = substr($query,0,-1);
+            $results = $wpdb->query($query);
+        }else{
+        }
+    }
+    update_option('sb_instagram_settings', $sb_instagram_settings);
+
     die();
 }
 

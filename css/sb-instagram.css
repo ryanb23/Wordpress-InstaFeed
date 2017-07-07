@@ -1979,5 +1979,121 @@ width: 210px !important;
 }
 
 
+#instagram_login{
+  font-family: "Dosis", Arial, "Helvetica Neue", Helvetica, sans-serif;
+  text-align: center;
+  text-transform: uppercase;
+} 
+#instagram_login .modal-content{
+  max-width: 420px;
+  margin: auto;
+} 
+#instagram_login i{
+  font-size:40px;
+  color: rgb(225, 99, 92);
+} 
+#instagram_login p{
+    padding: 8px 10px;
+    background-color: #e0e0e0;
+    margin: 10px 0px;
+    font-size: 23px;
+}
+#instagram_login .brand_influencer{
 
+}
 
+/* Base for label styling */
+#instagram_login {
+  /* checkbox aspect */
+  /* checked mark aspect */
+  /* checked mark aspect changes */
+  /* disabled checkbox */
+  /* accessibility */
+  /* hover style just for information */
+}
+#instagram_login [type="checkbox"]:not(:checked), #instagram_login [type="checkbox"]:checked {
+  position: absolute;
+  left: -9999px;
+}
+#instagram_login [type="checkbox"]:not(:checked) + label, #instagram_login [type="checkbox"]:checked + label {
+  position: relative;
+  padding-left: 1.95em;
+  cursor: pointer;
+  line-height: 21px;
+}
+#instagram_login [type="checkbox"]:not(:checked) + label:before, #instagram_login [type="checkbox"]:checked + label:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1.25em;
+  height: 1.25em;
+  border: 2px solid #ccc;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .1);
+}
+#instagram_login [type="checkbox"]:not(:checked) + label:after, #instagram_login [type="checkbox"]:checked + label:after {
+  content: '✔';
+  position: absolute;
+  top: 0.1em;
+  left: 0.3em;
+  font-size: 1.3em;
+  line-height: 0.8;
+  color: rgb(225, 99, 92);
+  transition: all 0.2s;
+}
+#instagram_login [type="checkbox"]:not(:checked) + label:after {
+  opacity: 0;
+  transform: scale(0);
+}
+#instagram_login [type="checkbox"]:checked + label:after {
+  opacity: 1;
+  transform: scale(1);
+}
+#instagram_login [type="checkbox"]:disabled:not(:checked) + label:before, #instagram_login [type="checkbox"]:disabled:checked + label:before {
+  box-shadow: none;
+  border-color: rgb(225, 99, 92);
+  background-color: #ddd;
+}
+#instagram_login [type="checkbox"]:disabled:checked + label:after {
+  color: #999;
+}
+#instagram_login [type="checkbox"]:disabled + label {
+  color: #aaa;
+}
+#instagram_login [type="checkbox"]:checked:focus + label:before, #instagram_login [type="checkbox"]:not(:checked):focus + label:before {
+  border: 2px dotted rgb(225, 99, 92);
+}
+#instagram_login label:hover:before {
+  border: 2px solid rgb(225, 99, 92) !important;
+}
+#instagram_login .brand_div{
+  display: inline-block;
+  margin:0px auto;
+}#instagram_login .influencer_div{
+  display: inline-block;
+  margin:0px auto;
+}
+#instagram_login .checkbox-div{
+  margin:8px 5px;
+  text-align: left;
+}
+@media screen and (max-width: 972px) {
+  #instagram_login .influencer_div .checkbox-div{
+    display: inline-block;
+  }
+  #instagram_login .influencer_div{
+    width:100%;
+  }
+}
+#instagram_login .country .checkbox-div{
+
+}
+#instagram_login .country_div{
+  display:inline-block;
+  margin:auto;
+}
+#instagram_login label{
+  color:#333 !important;
+}

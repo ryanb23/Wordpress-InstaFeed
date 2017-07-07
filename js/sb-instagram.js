@@ -1408,9 +1408,17 @@ if(!sbi_js_exists){
                                             url: sbi_page_url,
                                             dataType: "jsonp",
                                             success: function (data) {
-                                                profile_picture_arr[index] = (data.data.profile_picture);
-                                                profile_username_arr[index] = (data.data.username);
-                                                followed_by_arr[index] = (data.data.counts.followed_by);
+                                                if(typeof data.data != 'undefined')
+                                                {
+                                                    profile_picture_arr[index] = (data.data.profile_picture);
+                                                    profile_username_arr[index] = (data.data.username);
+                                                    followed_by_arr[index] = (data.data.counts.followed_by);
+                                                }else
+                                                {
+                                                    profile_picture_arr[index] = null;
+                                                    profile_username_arr[index] = null;
+                                                    followed_by_arr[index] = null;
+                                                }
                                                 if(profile_picture_arr.length == looparray.length)
                                                     sbi_generate_post_header(profile_picture_arr, profile_username_arr, followed_by_arr);
                                             }
@@ -1452,6 +1460,7 @@ if(!sbi_js_exists){
                                         } else {
                                             post_style_header += '<div class="multi_sibHeader" style="width:' + avatar.length * 200 + 'px;">';
                                             jQuery.each(avatar, function (index, entry) {
+                                                if(entry != null)
                                                 post_style_header += '<div class="multi_sibHeaderItem"><a href="http://rank.social/' + profile_username[index] + '"><h2 style="text-align: center;"><img class="aligncenter wp-image-1751" src="' + entry + '" alt="12534109_445747985636071_317825138_a" height="71" width="71">' + kFormatter(followed_by[index]) + '</h2><h2 style="text-align:center;">' + profile_username[index] + '</h2></a></div>';
                                             });
                                             post_style_header += '<div style="clear:both"></div></div>';
@@ -1771,9 +1780,16 @@ if(!sbi_js_exists){
                                         url: sbi_page_url,
                                         dataType: "jsonp",
                                         success: function (data) {
-                                            profile_picture_arr.push(data.data.profile_picture);
-                                            profile_username_arr.push(data.data.username);
-                                            followed_by_arr.push(data.data.counts.followed_by);
+                                            if(typeof data.data != "undefined")
+                                            {
+                                                profile_picture_arr.push(data.data.profile_picture);
+                                                profile_username_arr.push(data.data.username);
+                                                followed_by_arr.push(data.data.counts.followed_by);
+                                            }else{
+                                                profile_picture_arr.push(null);
+                                                profile_username_arr.push(null);
+                                                followed_by_arr.push(null);
+                                            }
                                             if(profile_picture_arr.length == looparray.length)
                                                 sbi_generate_post_header(profile_picture_arr, profile_username_arr, followed_by_arr);
                                         }
@@ -1791,7 +1807,8 @@ if(!sbi_js_exists){
                                     {
                                         post_style_influencer_header += '<div class="multi_sibHeader" style="width:'+avatar.length * 200+'px;">';
                                         jQuery.each(avatar,function(index,entry){
-                                            post_style_influencer_header += '<div class="multi_sibHeaderItem"><a href="http://rank.social/'+profile_username[index] +'"><h2 style="text-align: center;"><img class="aligncenter wp-image-1751" src="'+entry+'" alt="12534109_445747985636071_317825138_a" height="71" width="71">' + kFormatter(followed_by[index]) + '</h2><h2 style="text-align:center;">'+profile_username[index]+'</h2></a></div>';
+                                            if(entry != null)
+                                                post_style_influencer_header += '<div class="multi_sibHeaderItem"><a href="http://rank.social/'+profile_username[index] +'"><h2 style="text-align: center;"><img class="aligncenter wp-image-1751" src="'+entry+'" alt="12534109_445747985636071_317825138_a" height="71" width="71">' + kFormatter(followed_by[index]) + '</h2><h2 style="text-align:center;">'+profile_username[index]+'</h2></a></div>';
                                         });
                                         post_style_influencer_header += '<div style="clear:both"></div></div>';
                                     }
