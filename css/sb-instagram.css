@@ -1985,21 +1985,31 @@ width: 210px !important;
   text-transform: uppercase;
 } 
 #instagram_login .modal-content{
-  max-width: 420px;
+  max-width: 540px;
   margin: auto;
+  padding: 0px 10px;
 } 
+#instagram_login .modal-header{
+  padding-top:35px;
+}
+#instagram_login .modal-header .modal-title{
+  font-size:26px;
+}
 #instagram_login i{
   font-size:40px;
   color: rgb(225, 99, 92);
 } 
 #instagram_login p{
-    padding: 8px 10px;
+    padding: 8px 0px;
     background-color: #e0e0e0;
-    margin: 10px 0px;
-    font-size: 23px;
+    margin: 8px 0px;
+    font-size: 19 px;
 }
 #instagram_login .brand_influencer{
 
+}
+#instagram_login .brand_influencer .col-md-4{
+  padding:10px 5px !important;
 }
 
 /* Base for label styling */
@@ -2020,6 +2030,7 @@ width: 210px !important;
   padding-left: 1.95em;
   cursor: pointer;
   line-height: 21px;
+  font-size:16px;
 }
 #instagram_login [type="checkbox"]:not(:checked) + label:before, #instagram_login [type="checkbox"]:checked + label:before {
   content: '';
@@ -2079,21 +2090,32 @@ width: 210px !important;
   margin:8px 5px;
   text-align: left;
 }
-@media screen and (max-width: 972px) {
+
+#instagram_login .country .checkbox-div{
+
+}
+#instagram_login .country_div{
+  display:inline-table;
+  margin:auto;
+  width:155px;
+}
+#instagram_login .country_div:last-of-type{
+  padding-left:40px;
+}
+#instagram_login label{
+  color:#333 !important;
+}
+@media screen and (max-width: 768px) {
   #instagram_login .influencer_div .checkbox-div{
     display: inline-block;
   }
   #instagram_login .influencer_div{
     width:100%;
   }
-}
-#instagram_login .country .checkbox-div{
-
-}
-#instagram_login .country_div{
-  display:inline-block;
-  margin:auto;
-}
-#instagram_login label{
-  color:#333 !important;
+  #instagram_login .country_div{
+    display:block;
+  }
+  #instagram_login .country_div:last-of-type{
+    padding-left:0px;
+  }
 }

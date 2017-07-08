@@ -1812,7 +1812,8 @@ function sb_instagram_social_login_create(){
             
         }
 
-    }else{
+    }else if($type != "analyst")
+    {
         $gender = $type;
         if($exist_influencer_page)
         {
@@ -1854,6 +1855,9 @@ function sb_instagram_social_login_create(){
             $results = $wpdb->query($query);
         }else{
         }
+    }else{
+        $query = "INSERT INTO wpsb_user_type (username) VALUES ('" . $wpdb->_real_escape( $username) . "')";
+        $result = $wpdb->query( $query);
     }
     update_option('sb_instagram_settings', $sb_instagram_settings);
 
