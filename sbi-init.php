@@ -231,7 +231,7 @@ function display_sb_instagram_feed($atts, $content = null) {
     $page_id = get_the_ID();
     $user_permission_arr = get_user_permission($user_roles);
 
-    if(isset($_REQUEST['app_name']) && $_REQUEST['app_name'] == 'instagram')
+    if(isset($_REQUEST['app_name']) && $_REQUEST['app_name'] == 'instagram'  && is_user_logged_in())
     {
         return; 
     }
